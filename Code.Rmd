@@ -4,3 +4,117 @@ author: "Garance MALNOË et Matthias MAZET"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
+# Introduction
+Explication du contexte (lien avec la fiabilité ?) et explication des objectifs du projet.
+
+# Simulations
+```{r}
+simulations <- function(horizon=100,dt_sim=0.01,dt_insp=5,alpha,beta,theta){
+  # Simulations du processus continu
+  grille_sim <- seq(0, horizon, by=dt_sim)
+  a <- function(t) alpha*t^beta # val de a(t)
+  shape <- diff(a(grille_sim)) # a(t) - a(s)
+  increments <- rgamma(length(shape), shape=shape, scale=theta)
+  X_sim <- c(0, cumsum(increments))
+  
+  # Calul des inspections
+  grille_insp <- seq(0, horizon, by=dt_insp)
+  n <- dt_insp / dt_sim
+  X_insp <- X_sim[seq(1, length(X_sim), by = n)]
+  
+  list(grille_sim=grille_sim, X_sim=X_sim, grille_insp=grille_insp, X_insp=X_insp)
+}
+
+plot_simulations <- function(simulations,main=""){
+  plot(simulations$grille_sim,simulations$X_sim,col="blue",
+       pch=20,
+       xlab="t",ylab="Xt",main=main,
+       cex.main=0.7,cex.axis=0.6)
+  points(simulations$grille_insp,simulations$X_insp,col="red", pch=20)
+  legend(x="bottomright",legend=c("Xt simulés","Xt inspectés"),fill=c("blue","red"))
+}
+```
+
+## Variations de alpha
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+beta <- 2
+theta <- 2
+
+list_alpha <- c(1,10,20)
+
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[1],beta=beta,theta=theta)
+plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[1]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[2],beta=beta,theta=theta)
+plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[2]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[3],beta=beta,theta=theta)
+plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[3]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+```
+Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à alpha :
+1 -> 20.000
+10 -> 200.000
+20 -> 400.000
+Faire le lien avec les maths / la théorie.
+Dégradations + rapide avec alpha + grand.
+
+## Variations de beta
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+alpha <- 1
+theta <- 2
+
+list_beta <- c(0.5,1,2)
+
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[1],theta=theta)
+plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[1]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[2],theta=theta)
+plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[2]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[3],theta=theta)
+plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[3]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+```
+Commentaire :
+beta < 1, dégradation qui ralenti, forme concave
+beta = 1, dégradation linéaire, forme linéaire
+beta > 1, dégradation accélérée, forme convexe
+
+## Variations de theta
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+alpha <- 1
+beta <- 1
+
+list_theta <- c(0.5,1,2)
+
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[1])
+plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[1],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[2])
+plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[2],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+
+simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[3])
+plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[3],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+```
+Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à theta :
+0.5 -> 50
+1 -> 100
+2 -> 200
+Dégradation + rapide avec theta + grand
+Faire le lien avec les maths / la théorie.
+
+# Etude de l'inférence bayésienne
+
+
+# Conclusion
