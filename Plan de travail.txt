@@ -1,0 +1,21 @@
+# 1. Simulation du processus
+Pas de simulation != pas d'inspection
+Le pas de simulation sert à approximer le processus qui est continu.
+Le pas d'inspection sert à imiter une observation imparfaite du réel.
+
+# 2. Etude de l'inférence bayésienne
+-> Choisir les lois a priori pour alpha, beta et theta.
+-> Pour chaque combinaison de loi regarder ce qu'il se passe pour différentes valeurs de alpha, beta et theta réelle, selon l'avis de l'expert et selon la confiance accordée à l'expert et comparer au MLE.
+
+
+-> Regarder l'impact du choix du pas d'inspection
+	- Petit pas => plus de données, une meilleur "résolution", on voit mieux ce qu'il se passe et donc permet de mieux identifier alpha, beta et theta. Par contre dans la réalité c'est + coûteux (discuter de l'aspect réaliste d'une inspection tous les x jours) et plus de bruit.
+	- Grand pas => Moins cher mais moins d'information, postérieur + larges / biaisés selon la confiance accordée à l'expert et alpha/beta/theta moins bien évalués. Le choix d'un bon prior devient + important (à mettre en lien avec ce qu'on trouvera).
+
+
+Sens de beta :
+	-> beta = 1, dégradation linéaire
+	-> beta > 1, dégradation accélérée
+	-> beta < 1, dégradation qui ralenti
+Sens de alpha :
+Sens de theta :

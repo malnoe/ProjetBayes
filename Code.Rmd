@@ -1,0 +1,6 @@
+---
+title: "Projet statistiques bayésiennes"
+author: "Garance MALNOË et Matthias MAZET"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
