@@ -33,7 +33,7 @@ library(GGally)
 À partir d'un processus gamma non homogène simulé, nous voulons construire une inférence bayésienne permettant de retrouver les paramètres du dit processus.
 Nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous posons aussi, pour tout $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$ et, pour tout $x \in \mathbb{R}_+$, $\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}$. \
 L'inférence bayésienne va donc nous servir à retrouver 3 paramètres : $\alpha,\ \beta \text{ et } \theta$.
-Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en x phases : i) la simulation du processus selon différentes lois pour $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, ii) la mise en place de l'inférence bayésienne et iii) l'étude de l'impact du pas d'inspection. \
+Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en x phases : i) la simulation du processus selon différentes valeurs pour $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, ii) la mise en place de l'inférence bayésienne et iii) l'étude de l'impact du pas d'inspection. \
 Afin de se fixer un cadre d'étude, nous restreignons les possibilités pour les lois théoriques de chaque paramètre :
 
   - $\alpha$ et $\beta$ suivront chacun soit une loi *lognormale*, soit une loi *Gamma*.
@@ -42,6 +42,10 @@ Afin de se fixer un cadre d'étude, nous restreignons les possibilités pour les
 \
 
 # **Simulations**
+Afin de vérifier l'effet théorique de chaque paramètre sur le processus, nous regardons individuellement l'impact de chacun. Pour cela, nous définissons 2 fonctions qui vont nous permettre de réaliser les simulations tout au long de ce rapport : 
+
+  - La fonction `simulations`, qui prend en entrée les paramètres $\alpha,\ \beta \text{ et } \theta$ du processus gamma ainsi que la taille des pas de simulation et d'inspection, et qui retourne une liste des grilles (simulation et inspection) et du processus observé sur celles-ci (simulation et inspection).
+  - La fonction `plot_simulations`, qui prend en entrée la sortie de `simulations` et qui retourne le graphique du processus associé, en distinguant les points simulés des points inspectés.
 ```{r}
 # Fonction pour simuler un processus gamma
 simulations <- function(horizon = 100, dt_sim = 0.01, dt_insp = 5, alpha, beta, theta){
@@ -91,16 +95,18 @@ plot_simulations <- function(simulations, subtitle = "") {
     )
 }
 ```
+\
 
-## *Variations de alpha*
-```{r SimAlpha, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\beta = 2$, $\\theta = 2$) pour différents $\\alpha$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
+## *Variations de $\alpha$*
+Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.
+```{r SimAlpha, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\beta = 1$, $\\theta = 2$) pour différents $\\alpha$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
 # Paramètres de simulations
 dt_sim <- 0.01
 dt_insp <- 5
-beta <- 2
+beta <- 1
 theta <- 2
 # Valeurs de alpha
 list_alpha <- c(.1, 1, 10, 20)
@@ -133,6 +139,8 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
+Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 20 000) à $\alpha$ : plus il est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
+
 Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à alpha :
 0.1 -> 2000
 1 -> 20.000
@@ -142,7 +150,8 @@ Faire le lien avec les maths / la théorie.
 Dégradations + rapide avec alpha + grand.
 \
 
-## *Variations de beta*
+## *Variations de $\beta$*
+Observons maintenant l'effet de $\beta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = 1$ et $\theta = 2$. Nous prenons ensuite $\beta \in \{0.5,\ 1,\ 2,\ 3\}$ afin d'observer son effet.
 ```{r SimBeta, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\theta = 2$) pour différents $\\beta$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -183,13 +192,15 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-Commentaire :
-beta < 1, dégradation qui ralenti, forme concave
-beta = 1, dégradation linéaire, forme linéaire
-beta > 1, dégradation accélérée, forme convexe
+Comme attendu, l'effet de $\beta$ varie selon l'intervalle de valeurs dans lequel il se trouve :
+
+  - Pour un $\beta < 1$, la courbe et concave, i.e. la dégradation ralenti au cours du temps.
+  - Pour $\beta = 1$, la courbe est linéaire, i.e. la dégradation évolue toujours de la même manière au cours du temps.
+  - Pour un $\beta > 1$, la courbe est concave, i.e. la dégradation s'accélère au cours du temps. Nous constatons d'ailleurs que, plus $\beta$ est grand, plus l'accélération de dégradation est forte **(\@ref(fig:SimBeta))**.
 \
 
-## *Variations de theta*
+## *Variations de $\theta$*
+Observons maintenant l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.
 ```{r SimTheta, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\beta = 1$) pour différents $\\theta$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -230,6 +241,7 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
+Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins fort que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 20 000 pour $\alpha$ **(\@ref(fig:SimTheta))**.
 
 Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à theta :
 0.5 -> 50
