@@ -2,8 +2,25 @@
 title: "Projet statistiques bayésiennes"
 author: "Garance MALNOË et Matthias MAZET"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  bookdown::pdf_document2:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+header-includes:
+ \usepackage{float}
+ \floatplacement{figure}{H}
+ \usepackage{mdframed}
+ \usepackage{caption}
+documentclass: article
+classoption: a4paper
+geometry: margin = 1.5 cm
 ---
+
+
+\newpage
+
+
 # Introduction
 Explication du contexte (lien avec la fiabilité ?) et explication des objectifs du projet.
 
