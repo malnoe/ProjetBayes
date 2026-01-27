@@ -39,7 +39,7 @@ simulations <- function(horizon=100,dt_sim=0.01,dt_insp=5,alpha,beta,theta){
   n <- dt_insp / dt_sim
   X_insp <- X_sim[seq(1, length(X_sim), by = n)]
   
-  list(grille_sim=grille_sim, X_sim=X_sim, grille_insp=grille_insp, X_insp=X_insp)
+  list(grille_sim=grille_sim, X_sim=X_sim, grille_insp=grille_insp, X_insp=X_insp,t_insp=grille_insp)
 }
 
 plot_simulations <- function(simulations,main=""){
@@ -132,6 +132,127 @@ Dégradation + rapide avec theta + grand
 Faire le lien avec les maths / la théorie.
 
 # Etude de l'inférence bayésienne
+
+
+
+```{r}
+library(invgamma)
+```
+
+```{r}
+# Fonctions a posteriori pour alpha
+## Lognormale(mu,sigma)
+post_alpha_lognormale <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha){
+  # Calcul de mu et sigma de la lognormale à partir de mu_alpha et sigma_alpha 
+  # donnés par expert et confiance accordée
+  mu <- log(mu_alpha) - log(sigma_alpha/mu_alpha^2+1)/2
+  sigma <- sqrt(ln(sigma_alpha/mu_alpha^2+1))
+  
+}
+## Gamma(k,s)
+
+# Fonctions a posteriori pour beta
+## Lognormale(mu,sigma)
+
+## Gamma(k,s)
+
+```
+
+
+```{r}
+algo_Gibbs_Metropolis_Hastings(post_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                               post_beta,mu_beta,sigma_beta,tau_beta,beta0,
+                               mu_theta,sigma_theta,theta0,
+                               data,t_insp, K,burnin){
+  
+  # post_alpha <- fonction pour le calcul de ln(posteriori(alpha~))
+  # mu_alpha <- moyenne de l'expert
+  # sigma_alpha <- confiance en l'expert
+  # tau_alpha <- variation de la normale
+  # alpha0 <- initialisation de alpha pour chaine de markov
+  
+  # post_beta <- fonction pour le calcul de ln(posteriori(beta~))
+  # mu_beta <- moyenne de l'expert
+  # sigma_beta <- confiance en l'expert
+  # tau_beta <- variation de la normale
+  # beta0 <- initialisation de beta pour chaine de markov
+  
+  # mu_theta <- moyenne de l'expert
+  # sigma_theta <- confiance expert
+  # theta0 <- initialisation de theta pour la chaine de markov
+  
+  # data <- x1,...,xn observations (à transformer en y1,...,yn)
+  # t_insp <- t1,...,tn les temps d'inspection
+  # K <- nombre d'itérations des algorithmes
+  # burnin <- nombre d'itérations à supprimer au début
+  
+  # Transformation des données en incréments y_i = x(t_i) - x(t_i-1)
+  y <- data[2:length(data)] - data[1:length(data)-1]
+  n <- length(y)
+  
+  # Calcul du a et b de l'inverse gamma pour simuler theta à partir de esp_theta et de var_theta
+  a_theta <- mu_theta^2/sigma_theta+2
+  b_theta <- (a_theta-1)*mu_theta
+  
+  # Initialisation des vecteurs de résultats
+  res_alpha <- numeric(K+1)
+  res_alpha[1] <- alpha0
+  res_beta <- numeric(K+1)
+  res_beta[1] <- beta0
+  res_theta <- numeric(K+1)
+  res_theta[1] <- theta0
+  
+  # Boucle sur k in 2,...,K+1 avec calcul de alpha^(k),beta^(k) et theta^(k)
+  for(k in 2:(K+1)){
+    # 1. Simulation de theta^(k)
+      # Calcul des k_i = alpha(ti^beta - ti-1^beta) avec alpha=alpha^(k-1) et beta=beta^(k-1)
+    list_ki <- res_alpha[k-1]*(t_insp[2:(n+1)]^res_beta[k-1]-t_insp[1:n]^res_beta[k-1])
+      # Calcul de a_bis = a + somme ki
+    a_bis <- a_theta+sum(list_ki)
+      # Calcul de b_bis = b + somme yi
+    b_bis <- b_theta+sum(y)
+    res_theta[k]  <- rinvgamma(1,shape=a_bis,rate=b_bis)
+    
+    # 2. Simulation de alpha^(k)
+      # Tirage de alpha_tilde
+    alpha_tilde <- rnorm(1,mean=res_alpha[k-1],tau_alpha^2)
+      # Vérification alpha_tilde > 0
+    if(alpha_tilde<=0){
+      res_alpha[k] <- res_alpha[k-1]
+    }
+      # Si alpha_tilde > 0, choix conservation par calcul rapport lois a posteriori
+    else{
+      first_log <- post_alpha(alpha_tilde,y,t_insp,res_beta[k-1],res_theta[k],mu_alpha,sigma_alpha)
+      second_log <- post_alpha(res_alpha[k-1],y,t_insp,res_beta[k-1],res_theta[k],mu_alpha,sigma_alpha)
+      log_r <- first_log-second_log
+      u <- runif(n=1,0,1)
+      res_alpha[k] <- alpha_tilde * (log(u)<=log_r) + res_alpha[k-1] * (log(u)>log_r)
+    }
+    
+    # 3. Simulation de beta^(k)
+      # Tirage de beta_tilde
+    beta_tilde <- rnorm(1,mean=res_beta[k-1],tau_beta^2)
+      # Vérification beta_tilde > 0
+    if(beta_tilde<=0){
+      res_beta[k] <- res_beta[k-1]
+    }
+      # Si beta_tilde > 0, choix conservation par calcul rapport lois a posteriori
+    else{
+      first_log <- post_beta(beta_tilde,y,t_insp,res_alpha[k],res_theta[k],mu_beta,sigma_beta)
+      second_log <- post_beta(res_beta[k-1],t_insp,y,res_alpha[k],res_theta[k],mu_beta,sigma_beta)
+      log_r <- first_log-second_log
+      u <- runif(n=1,0,1)
+      res_alpha[k] <- alpha_tilde * (log(u)<=log_r) + res_alpha[k-1] * (log(u)>log_r)
+    }
+  }
+  
+  # Résultat avec burnin
+  return(list(res_theta=tail(res_theta,n=K-burnin),
+              res_alpha=tail(res_alpha,n=K-burnin),
+              res_beta=tail(res_beta,n=K-burnin)))
+  
+}
+```
 
 
 # Conclusion
