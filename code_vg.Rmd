@@ -133,45 +133,86 @@ Faire le lien avec les maths / la théorie.
 
 # Etude de l'inférence bayésienne
 
+## Théorie
 
+## Fonctions
 
 ```{r}
 library(invgamma)
 ```
 
+### Fonctions utiles, calcul du log des loi a posteriori
+
 ```{r}
+# Fonction de calcul des ki
+func_list_ki <- function(alpha, beta, t_insp){
+  n <- length(t_insp)-1
+  alpha * (t_insp[2:(n+1)]^beta-t_insp[1:n]^beta)
+}
+
+
 # Fonctions a posteriori pour alpha
 ## Lognormale(mu,sigma)
-post_alpha_lognormale <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha){
-  # Calcul de mu et sigma de la lognormale à partir de mu_alpha et sigma_alpha 
-  # donnés par expert et confiance accordée
-  mu <- log(mu_alpha) - log(sigma_alpha/mu_alpha^2+1)/2
-  sigma <- sqrt(ln(sigma_alpha/mu_alpha^2+1))
+logpost_alpha_lognormale <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha){
   
+  mu <- log(mu_alpha) - 0.5 * log(1 + sigma_alpha/(mu_alpha^2))
+  sigma <- sqrt(log(1 + sigma_alpha/(mu_alpha^2)))
+
+  list_ki <- func_list_ki(alpha, beta, t_insp)
+  
+  -log(alpha) - ((log(alpha)-mu)^2)/(2*sigma^2) +
+    sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
 }
+
+
 ## Gamma(k,s)
+logpost_alpha_gamma <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha){
+  k <- mu_alpha^2/sigma_alpha
+  s <- sigma_alpha/mu_alpha  
+
+  list_ki <- func_list_ki(alpha, beta, t_insp)
+
+  (k-1)*log(alpha) - alpha/s +
+    sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
+}
 
 # Fonctions a posteriori pour beta
 ## Lognormale(mu,sigma)
+logpost_beta_lognormale <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta){
+  mu <- log(mu_beta)- 0.5 * log(1 + sigma_beta/(mu_beta^2))
+  sigma <- sqrt(log(1 + sigma_beta/(mu_beta^2)))
 
-## Gamma(k,s)
+  list_ki <- func_list_ki(alpha, beta, t_insp)
 
+  -log(beta) - ((log(beta)-mu)^2)/(2*sigma^2) +
+    sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
+}
+
+## Uniforme(a,b)
+logpost_beta_unif <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta){
+  a <- mu_beta - sqrt(3*sigma_beta)
+  b <- mu_beta + sqrt(3*sigma_beta)
+
+  if(beta < a || beta > b) return(-Inf)
+  list_ki <- func_list_ki(alpha, beta, t_insp)
+  sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
+}
 ```
 
-
+### Fonction algorithme de Gibbs-Metropolis-Hastings
 ```{r}
-algo_Gibbs_Metropolis_Hastings(post_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
-                               post_beta,mu_beta,sigma_beta,tau_beta,beta0,
-                               mu_theta,sigma_theta,theta0,
-                               data,t_insp, K,burnin){
+algo_Gibbs_Metropolis_Hastings <- function(logpost_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin){
   
-  # post_alpha <- fonction pour le calcul de ln(posteriori(alpha~))
+  # logpost_alpha <- fonction pour le calcul de log(posteriori(alpha~))
   # mu_alpha <- moyenne de l'expert
   # sigma_alpha <- confiance en l'expert
   # tau_alpha <- variation de la normale
   # alpha0 <- initialisation de alpha pour chaine de markov
   
-  # post_beta <- fonction pour le calcul de ln(posteriori(beta~))
+  # logpost_beta <- fonction pour le calcul de log(posteriori(beta~))
   # mu_beta <- moyenne de l'expert
   # sigma_beta <- confiance en l'expert
   # tau_beta <- variation de la normale
@@ -181,7 +222,7 @@ algo_Gibbs_Metropolis_Hastings(post_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
   # sigma_theta <- confiance expert
   # theta0 <- initialisation de theta pour la chaine de markov
   
-  # data <- x1,...,xn observations (à transformer en y1,...,yn)
+  # data <- x1,...,xn observations (à transformer en y1,...,yn) les incréments
   # t_insp <- t1,...,tn les temps d'inspection
   # K <- nombre d'itérations des algorithmes
   # burnin <- nombre d'itérations à supprimer au début
@@ -213,37 +254,32 @@ algo_Gibbs_Metropolis_Hastings(post_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
     b_bis <- b_theta+sum(y)
     res_theta[k]  <- rinvgamma(1,shape=a_bis,rate=b_bis)
     
-    # 2. Simulation de alpha^(k)
-      # Tirage de alpha_tilde
-    alpha_tilde <- rnorm(1,mean=res_alpha[k-1],tau_alpha^2)
-      # Vérification alpha_tilde > 0
-    if(alpha_tilde<=0){
+    # 2. Simulation de alpha^(k) (MH)
+    alpha_tilde <- rnorm(1, mean = res_alpha[k-1], sd = tau_alpha)
+    if(alpha_tilde <= 0){
       res_alpha[k] <- res_alpha[k-1]
-    }
-      # Si alpha_tilde > 0, choix conservation par calcul rapport lois a posteriori
-    else{
-      first_log <- post_alpha(alpha_tilde,y,t_insp,res_beta[k-1],res_theta[k],mu_alpha,sigma_alpha)
-      second_log <- post_alpha(res_alpha[k-1],y,t_insp,res_beta[k-1],res_theta[k],mu_alpha,sigma_alpha)
-      log_r <- first_log-second_log
-      u <- runif(n=1,0,1)
-      res_alpha[k] <- alpha_tilde * (log(u)<=log_r) + res_alpha[k-1] * (log(u)>log_r)
+    } 
+    else {
+      first_log  <- logpost_alpha(alpha_tilde, y, t_insp, res_beta[k-1], res_theta[k], mu_alpha, sigma_alpha)
+      second_log <- logpost_alpha(res_alpha[k-1], y, t_insp, res_beta[k-1], res_theta[k], mu_alpha, sigma_alpha)
+      log_r <- first_log - second_log
+      u <- runif(1)
+      res_alpha[k] <- ifelse(log(u) <= log_r, alpha_tilde, res_alpha[k-1])
     }
     
-    # 3. Simulation de beta^(k)
-      # Tirage de beta_tilde
-    beta_tilde <- rnorm(1,mean=res_beta[k-1],tau_beta^2)
-      # Vérification beta_tilde > 0
-    if(beta_tilde<=0){
+    # 3. Simulation de beta^(k) (MH)
+    beta_tilde <- rnorm(1, mean = res_beta[k-1], sd = tau_beta)
+    if(beta_tilde <= 0){
       res_beta[k] <- res_beta[k-1]
+    } 
+    else {
+      first_log  <- logpost_beta(beta_tilde, y, t_insp, res_alpha[k], res_theta[k], mu_beta, sigma_beta)
+      second_log <- logpost_beta(res_beta[k-1], y, t_insp, res_alpha[k], res_theta[k], mu_beta, sigma_beta)
+      log_r <- first_log - second_log
+      u <- runif(1)
+      res_beta[k] <- ifelse(log(u) <= log_r, beta_tilde, res_beta[k-1])
     }
-      # Si beta_tilde > 0, choix conservation par calcul rapport lois a posteriori
-    else{
-      first_log <- post_beta(beta_tilde,y,t_insp,res_alpha[k],res_theta[k],mu_beta,sigma_beta)
-      second_log <- post_beta(res_beta[k-1],t_insp,y,res_alpha[k],res_theta[k],mu_beta,sigma_beta)
-      log_r <- first_log-second_log
-      u <- runif(n=1,0,1)
-      res_alpha[k] <- alpha_tilde * (log(u)<=log_r) + res_alpha[k-1] * (log(u)>log_r)
-    }
+
   }
   
   # Résultat avec burnin
@@ -253,6 +289,104 @@ algo_Gibbs_Metropolis_Hastings(post_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
   
 }
 ```
+
+### Fonction calcul des estimateurs de vraisemblance par optimisation
+
+```{r}
+# - vraisemblance à minimiser pour trouver les MLE.
+negative_vraisemblance <- function(vect_param, y, t_insp){
+  alpha <- vect_param[1]
+  beta  <- vect_param[2]
+  theta <- vect_param[3]
+
+  list_ki <- func_list_ki(alpha, beta, t_insp)
+
+  if(any(!is.finite(list_ki)) || any(list_ki <= 0) || !is.finite(theta) || theta <= 0) return(1e100)
+  if(any(!is.finite(y)) || any(y <= 0)) return(1e100)
+
+  -(sum((list_ki - 1) * log(y) - (y/theta) - list_ki * log(theta) - lgamma(list_ki)))
+
+}
+
+# Fonction calculant les MLE via optimisation.
+mle <- function(alpha0, beta0, theta0, data, t_insp){
+  y <- data[2:length(data)] - data[1:(length(data)-1)]
+  init <- c(alpha0, beta0, theta0)
+  fit <- optim(
+    par = init,
+    fn  = negative_vraisemblance,
+    y = y,
+    t_insp = t_insp,
+    method = "BFGS",
+    control = list(maxit = 5000, reltol = 1e-10)
+  )
+  list(
+    alpha = fit$par[1],
+    beta  = fit$par[2],
+    theta = fit$par[3],
+    converged = (fit$convergence == 0)
+  )
+}
+```
+
+## Résultats
+
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+alpha <- 1
+beta <- 2
+theta <- 2
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=theta)
+```
+
+
+```{r}
+
+
+logpost_alpha <- logpost_alpha_gamma
+mu_alpha <- alpha+0.01
+sigma_alpha <- 1
+tau_alpha <- 0.5
+alpha0 <- mu_alpha
+
+logpost_beta <- logpost_beta_lognormale
+mu_beta <- beta+0.01
+sigma_beta <- 1
+tau_beta <- 0.5
+beta0 <- mu_beta
+
+mu_theta <- theta+0.01
+sigma_theta <- 1
+theta0 <- mu_theta
+
+data <- simulations1$X_insp
+t_insp <- simulations1$t_insp
+K <- 1000
+burnin <- 100
+
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+```
+
+
+
+Visualisations :
+Fixer un alpha, beta et theta.
+Pour chaque coombinaison de lois a priori Faire grille avec chaque cas de figure (expert bon ou mauvais, confiance faible ou élevée). (ggarance 2 cols 2 lignes)
+Visualisation avec titre commun les vrais paramètres et lois a priori choisies, titre perso avec cas de figure expert et simulations avec vrais paramètres et simulations avec paramètres estimés bayes et simulations avec MLE.
+
+-> Graphe de convergence pour chaque estimateur.
+
+Commentaire :
+Il est important de vérifier la convergence de GMH et de MLE (GMH en faisant le plot de res_param et voir si bcp oscillations ou pas et pour MLE avec converged )
+
 
 
 # Conclusion
