@@ -21,119 +21,339 @@ geometry: margin = 1.5 cm
 \newpage
 
 
-# Introduction
-Explication du contexte (lien avec la fiabilité ?) et explication des objectifs du projet.
+```{r, warning=FALSE}
+# Packages nécessaires
+library(ggplot2)
+library(ggpubr)
+library(GGally)
+```
 
-# Simulations
+
+\newpage
+
+
+# **Introduction**
+À partir d'un processus gamma non homogène simulé, nous voulons construire une inférence bayésienne permettant de retrouver les paramètres du dit processus.
+Nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous posons aussi, pour tout $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$ et, pour tout $x \in \mathbb{R}_+$, $\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}$. \
+L'inférence bayésienne va donc nous servir à retrouver 3 paramètres : $\alpha,\ \beta \text{ et } \theta$.
+Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en x phases : i) la simulation du processus selon différentes valeurs pour $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, ii) la mise en place de l'inférence bayésienne et iii) l'étude de l'impact du pas d'inspection. \
+Afin de se fixer un cadre d'étude, nous restreignons les possibilités pour les lois théoriques de chaque paramètre :
+
+  - $\alpha$ et $\beta$ suivront chacun soit une loi *lognormale*, soit une loi *Gamma*.
+  - $\theta$ suivra une loi *Inversegamma*.
+\
+\
+
+# **Simulations**
+Afin de vérifier l'effet théorique de chaque paramètre sur le processus, nous regardons individuellement l'impact de chacun. Pour cela, nous définissons 2 fonctions qui vont nous permettre de réaliser les simulations tout au long de ce rapport : 
+
+  - La fonction `simulations`, qui prend en entrée les paramètres $\alpha,\ \beta \text{ et } \theta$ du processus gamma ainsi que la taille des pas de simulation et d'inspection, et qui retourne une liste des grilles (simulation et inspection) et du processus observé sur celles-ci (simulation et inspection).
+  - La fonction `plot_simulations`, qui prend en entrée la sortie de `simulations` et qui retourne le graphique du processus associé, en distinguant les points simulés des points inspectés.
 ```{r}
-simulations <- function(horizon=100,dt_sim=0.01,dt_insp=5,alpha,beta,theta){
-  # Simulations du processus continu
-  grille_sim <- seq(0, horizon, by=dt_sim)
-  a <- function(t) alpha*t^beta # val de a(t)
-  shape <- diff(a(grille_sim)) # a(t) - a(s)
+# Fonction pour simuler un processus gamma
+simulations <- function(horizon = 100, dt_sim = 0.01, dt_insp = 5, alpha, beta, theta){
+  # Simulations du processus continu, avec un pas de simulation dt_sim
+  grille_sim <- seq(0, horizon, by = dt_sim)
+  a <- function(t) {alpha*t^beta}  # val de a(t)
+  shape <- diff(a(grille_sim))     # a(t) - a(s)
   increments <- rgamma(length(shape), shape=shape, scale=theta)
   X_sim <- c(0, cumsum(increments))
-  
-  # Calul des inspections
-  grille_insp <- seq(0, horizon, by=dt_insp)
+  # Calcul des inspections, avec un pas d'inspection dt_insp
+  grille_insp <- seq(0, horizon, by = dt_insp)
   n <- dt_insp / dt_sim
   X_insp <- X_sim[seq(1, length(X_sim), by = n)]
-  
-  list(grille_sim=grille_sim, X_sim=X_sim, grille_insp=grille_insp, X_insp=X_insp,t_insp=grille_insp)
+  # Résultats
+  list(
+    grille_sim = grille_sim, X_sim = X_sim,     # Résultats simulés
+    grille_insp = grille_insp, X_insp = X_insp  # Résultats inspectés
+  )
 }
 
-plot_simulations <- function(simulations,main=""){
-  plot(simulations$grille_sim,simulations$X_sim,col="blue",
-       pch=20,
-       xlab="t",ylab="Xt",main=main,
-       cex.main=0.7,cex.axis=0.6)
-  points(simulations$grille_insp,simulations$X_insp,col="red", pch=20)
-  legend(x="bottomright",legend=c("Xt simulés","Xt inspectés"),fill=c("blue","red"))
+# Fonction graphique d'un processus
+plot_simulations <- function(simulations, subtitle = "") {
+  ggplot() +
+    geom_line(
+      aes(x = simulations$grille_sim, y = simulations$X_sim, col = "Simulées")
+      ) + 
+    geom_point(
+      aes(x = simulations$grille_insp, y = simulations$X_insp, col = "Inspectées"),
+      shape = 18, size = 2
+      ) +
+    scale_color_manual(
+      name = "Type de données",
+      values = c("Simulées" = "#2d0569", "Inspectées" = "#db2e0b"),
+    ) +
+    labs(x = "t", y = expression(X[t]), subtitle = subtitle) +
+    theme_light() +
+    theme(
+      axis.title = element_text(size = 10, face = "bold"),
+      axis.text = element_text(size = 8),
+      panel.border = element_blank(),
+      axis.line = element_line(colour = "darkgrey"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey85"),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 8),
+      legend.position = "right"
+    )
 }
 ```
+\
 
-## Variations de alpha
-```{r}
+## *Variations de $\alpha$*
+Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.
+```{r SimAlpha, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\beta = 1$, $\\theta = 2$) pour différents $\\alpha$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
+# Seed pour la reproductibilité
 set.seed(1)
-# Simulations 1
+
+# Paramètres de simulations
 dt_sim <- 0.01
 dt_insp <- 5
-beta <- 2
+beta <- 1
 theta <- 2
+# Valeurs de alpha
+list_alpha <- c(.1, 1, 10, 20)
 
-list_alpha <- c(1,10,20)
+# Simulations selon les valeurs de alpha de list_alpha et les paramètres fixés
+sim1 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[1], beta = beta, theta = theta
+)
+plot_sim1 <- plot_simulations(
+  sim1, subtitle = paste(expression(alpha), "=", list_alpha[1])
+)
+sim2 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[2], beta = beta, theta = theta
+)
+plot_sim2 <- plot_simulations(
+  sim2, subtitle = paste(expression(alpha), "=", list_alpha[2])
+)
+sim3 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[3], beta = beta, theta = theta
+)
+plot_sim3 <- plot_simulations(
+  sim3, subtitle = paste(expression(alpha), "=", list_alpha[3])
+)
+sim4 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[4], beta = beta, theta = theta
+)
+plot_sim4 <- plot_simulations(
+  sim4, subtitle = paste(expression(alpha), "=", list_alpha[4])
+)
 
-simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[1],beta=beta,theta=theta)
-plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[1]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[2],beta=beta,theta=theta)
-plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[2]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=list_alpha[3],beta=beta,theta=theta)
-plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",list_alpha[3]," beta=",beta," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
+Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 20 000) à $\alpha$ : plus il est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
+
 Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à alpha :
+0.1 -> 2000
 1 -> 20.000
 10 -> 200.000
 20 -> 400.000
 Faire le lien avec les maths / la théorie.
 Dégradations + rapide avec alpha + grand.
+\
 
-## Variations de beta
-```{r}
+## *Variations de $\beta$*
+Observons maintenant l'effet de $\beta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = 1$ et $\theta = 2$. Nous prenons ensuite $\beta \in \{0.5,\ 1,\ 2,\ 3\}$ afin d'observer son effet.
+```{r SimBeta, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\theta = 2$) pour différents $\\beta$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
+# Seed pour la reproductibilité
 set.seed(1)
-# Simulations 1
+
+# Paramètres de simulations
 dt_sim <- 0.01
 dt_insp <- 5
 alpha <- 1
 theta <- 2
+# Valeurs de beta
+list_beta <- c(0.5, 1, 2, 3)
 
-list_beta <- c(0.5,1,2)
+# Simulations selon les valeurs de alpha de list_beta et les paramètres fixés
+sim1 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[1], theta = theta
+)
+plot_sim1 <- plot_simulations(
+  sim1, subtitle = paste(expression(beta), "=", list_beta[1])
+)
+sim2 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[2], theta = theta
+)
+plot_sim2 <- plot_simulations(
+  sim2, subtitle = paste(expression(beta), "=", list_beta[2])
+)
+sim3 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[3], theta = theta
+)
+plot_sim3 <- plot_simulations(
+  sim3, subtitle = paste(expression(beta), "=", list_beta[3])
+)
+sim4 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[4], theta = theta
+)
+plot_sim4 <- plot_simulations(
+  sim4, subtitle = paste(expression(beta), "=", list_beta[4])
+)
 
-simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[1],theta=theta)
-plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[1]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[2],theta=theta)
-plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[2]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=list_beta[3],theta=theta)
-plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",list_beta[3]," theta=",theta,"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-Commentaire :
-beta < 1, dégradation qui ralenti, forme concave
-beta = 1, dégradation linéaire, forme linéaire
-beta > 1, dégradation accélérée, forme convexe
+Comme attendu, l'effet de $\beta$ varie selon l'intervalle de valeurs dans lequel il se trouve :
 
-## Variations de theta
-```{r}
+  - Pour un $\beta < 1$, la courbe et concave, i.e. la dégradation ralenti au cours du temps.
+  - Pour $\beta = 1$, la courbe est linéaire, i.e. la dégradation évolue toujours de la même manière au cours du temps.
+  - Pour un $\beta > 1$, la courbe est concave, i.e. la dégradation s'accélère au cours du temps. Nous constatons d'ailleurs que, plus $\beta$ est grand, plus l'accélération de dégradation est forte **(\@ref(fig:SimBeta))**.
+\
+
+## *Variations de $\theta$*
+Observons maintenant l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.
+```{r SimTheta, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\beta = 1$) pour différents $\\theta$, avec un pas de simulation de 0.01 et un pas d'inspection de 5", fig.pos="H"}
+# Seed pour la reproductibilité
 set.seed(1)
-# Simulations 1
+
+# Paramètres de simulations
 dt_sim <- 0.01
 dt_insp <- 5
 alpha <- 1
 beta <- 1
+# Valeurs de theta
+list_theta <- c(0.5, 1, 2, 5)
 
-list_theta <- c(0.5,1,2)
+# Simulations selon les valeurs de alpha de list_beta et les paramètres fixés
+sim1 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[1]
+)
+plot_sim1 <- plot_simulations(
+  sim1, subtitle = paste(expression(theta), "=", list_theta[1])
+)
+sim2 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[2]
+)
+plot_sim2 <- plot_simulations(
+  sim2, subtitle = paste(expression(theta), "=", list_theta[2])
+)
+sim3 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[3]
+)
+plot_sim3 <- plot_simulations(
+  sim3, subtitle = paste(expression(theta), "=", list_theta[3])
+)
+sim4 <- simulations(
+  dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[4]
+)
+plot_sim4 <- plot_simulations(
+  sim4, subtitle = paste(expression(theta), "=", list_theta[4])
+)
 
-simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[1])
-plot_simulations(simulations1,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[1],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations2 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[2])
-plot_simulations(simulations2,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[2],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
-
-simulations3 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=list_theta[3])
-plot_simulations(simulations3,main=paste0("Simulations d'un processur de gamma non-homogène (alpha=",alpha," beta=",beta," theta=",list_theta[3],"),\n avec un pas de ",dt_sim," et un pas d'inspection de ",dt_insp,"."))
+ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
+Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins fort que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 20 000 pour $\alpha$ **(\@ref(fig:SimTheta))**.
+
 Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à theta :
 0.5 -> 50
 1 -> 100
 2 -> 200
 Dégradation + rapide avec theta + grand
 Faire le lien avec les maths / la théorie.
+\
+\
+
+
+
 
 # Etude de l'inférence bayésienne
 
 ## Théorie
+Nous disposons d'un échantillon d'inspections du niveau de dégradation $x = \{x_0,\dots,x_n\}$ à différents temps d'inspection $t = \{t_0,\dots,t_n\}$ qui sont issus d'un processus gamma non-homogène de paramètres $\alpha,\:\beta$ et $\theta$ où les incréments sont positifs et indépendants. [Mettre le reste de l'énoncé].
+
+Nous souhaitons réaliser une estimation bayésienne des trois paramètres $\alpha,\:\beta$ et $\theta$, nous sommes donc dans le cas d'une estimation multidimensionnelle. Pour réaliser l'estimation, nous passons donc par les algorithmes de Gibbs et de Metropolis-Hasting en testant différentes combinaisons de loi a priori pour $\alpha,\:\beta$ et $\theta$.
+
+Pour $\alpha$, nous testerons une $\mathcal{Lognormale}(\mu,\sigma)$ et une $\mathcal{Gamma}(k,s)$.
+Pour $\beta$, nous testerons une $\mathcal{Lognormale}(\mu,\sigma)$ et une $\mathcal{Uniforme}(a,b)$.
+Pour $\theta$, nous testerons une $\mathcal{Invgamma}(a,b)$.
+Toutes ces lois ont des supports positifs, ce qui convient bien pour l'estimation de  $\alpha,\:\beta$ et $\theta > 0$.
+
+Pour l'ensemble des lois, nous allons plutôt travailler avec les incréments $y_i = x_i - x_{i-1}= x(t_i) - x(t_{i-1}) ,\: i\in\{1,\dots,n\}$. Nous allons également poser $k_i(\alpha,\beta) = a(t_i)-a(t_{i-1}) = \alpha(t_i^\beta-t_{i-1}^\beta)$ afin d'alléger les calculs suivants.
+
+Nous avons par hypothèse que $X(t_i)-X(t_{i-1}) = Y_i \sim Gamma(k_i(\alpha,\beta),\theta)$ donc $f(y_i | k_i(\alpha,\beta),\theta) = \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)-1}e^{\frac{y_i}{\theta}}$ 
+
+
+Puisque les incréments sont supposés indépendants, la vraisemblance des données $y$ sachant $\alpha,\:\beta$ et $\theta > 0$ est donc :
+$$
+L(y | \alpha,\beta,\theta) = \prod^n_{i=1} f(y_i | k_i(\alpha,\beta),\theta)\\
+L(y | \alpha,\beta,\theta) = \prod^n_{i=1} \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)-1}e^{\frac{y_i}{\theta}}
+$$
+Dans cette analyse, nous comparerons les estimations bayésiennes avec les estimations obtenues par maximum de vraisemblance, ces dernières seront obtenues en réalisant une optimisation (maximisation) de la fonction de vraisemblance pour les trois paramètres.
+
+### Calcul des lois a posteriori pour $\theta$
+Nous choisissons comme loi a priori pour $\theta$ une $\mathcal{Invgamma}(a,b)$, ainsi :
+
+$$
+p(\theta|y,\alpha,\beta) = L(y|\alpha,\beta,\theta) \times p(\theta)\\
+p(\theta|y,\alpha,\beta) \propto \theta^{\sum-k_i(\alpha,\beta)}exp(-\frac{\sum y_i}{\theta})\theta^{-(a+1)}exp(-\frac{b}{\theta})\\
+p(\theta|y,\alpha,\beta) \propto \theta^{-(\sum k_i(\alpha,\beta)+a+1)}exp(-\frac{\sum y_i + beta}{\theta})
+$$
+Nous pouvons reconnaitre, à une constante de normalisation prêt, la densité d'une $\mathcal{Invgamma}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons estimer $\theta$ avec un algorithme de $Gibbs$.
+Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $b$ pour l'Invgamma mais plutôt une estimation du paramètre $\theta$ : $\mu_{\theta}$ associé à une certaine confiance : $\sigma_{\theta}$. En supposant que $\mu_{\theta} = \mathbb{E}[\mathcal{Invgamma}(a,b)] = \frac{b}{a-1}$ et $Var(\mathcal{Invgamma}(a,b)) = \sigma_{\theta} = \frac{b^2}{(a-1)^2(a-2)}$ on a alors : $a = \frac{\mu_{\theta}^2}{\sigma_{\theta}}+2$ et $b = (a-1)\mu_{\theta}$.
+[Je peux détailler les calculs si besoin mais bon, c'est pas super central ici...]
+
+
+### Calcul des lois a posteriori pour $\alpha$
+1. $\mathcal{LogNormale}(\mu,\sigma)$
+$$
+p(\alpha|y,\beta,\theta) = L(y|\alpha,\beta,\theta) \times p(\alpha)\\
+p(\alpha|y,\beta,\theta) \propto \frac{1}{\alpha\sigma\sqrt{2\pi}}exp(-\frac{(ln(\alpha)-\mu)^2}{2\sigma^2})\prod\frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
+$$
+Nous ne reconnaissons pas de forme de loi usuelle, nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous plutôt que de regarder le rapport $\frac{p(\tilde\alpha|y,\beta,\theta)}{p(\alpha^{(k-1)}|y,\beta,\theta)}$ nous allons regarder $log(p(\tilde\alpha|y,\beta,\theta))-log(p(\alpha^{(k-1)}|y,\beta,\theta))$.
+
+$$
+ln(p(\alpha|y,\beta,\theta)) = -ln(\alpha) -\frac{(ln(\alpha)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
+$$
+
+Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2} $ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\alpha} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\alpha}) - \frac{ln(1 + \frac{\sigma_{\alpha}}{\mu_{\alpha}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\alpha}{\mu_\alpha^2}+1)}$.
+
+2. $\mathcal{Gamma}(k,s)$
+$$
+p(\alpha|y,\beta,\theta) = L(y|\alpha,\beta,\theta) \times p(\alpha)\\
+p(\alpha|y,\beta,\theta) \propto \frac{1}{\Gamma(k)s^k}\alpha^{k-1}e^{-\alpha/s}\prod\frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
+$$
+
+Nous ne reconnaissons pas de forme de loi usuelle, nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous plutôt que de regarder le rapport $\frac{p(\tilde\alpha|y,\beta,\theta)}{p(\alpha^{(k-1)}|y,\beta,\theta)}$ nous allons regarder $log(p(\tilde\alpha|y,\beta,\theta))-log(p(\alpha^{(k-1)}|y,\beta,\theta))$.
+
+$$
+ln(p(\alpha|y,\beta,\theta)) = (k-1)ln(\alpha)-\alpha/s + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
+$$
+Nous supposons également que l'expert ne nous donnerai pas directement $k$ et $s$ pour la gamma mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{Gamma}(k,s)] = \frac{k}{s} $ et $Var(\mathcal{Gamma}(k,s)) = \sigma_{\alpha} = \frac{k}{s^2}$ on a alors : $k = \frac{\mu_\alpha^2}{\sigma_\alpha}$ et $s = \frac{\sigma_\alpha}{\mu_\alpha}$.
+
+### Calcul des lois a posteriori pour $\beta$
+1. $\mathcal{LogNormale}(\mu,\sigma)$
+
+$$
+p(\beta|y,\alpha,\theta) = L(y|\beta,\alpha,\theta) \times p(\beta)\\
+p(\beta|y,\alpha,\theta) \propto \frac{1}{\beta\sigma\sqrt{2\pi}}exp(-\frac{(ln(\beta)-\mu)^2}{2\sigma^2})\prod\frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
+$$
+
+Nous ne reconnaissons pas de forme de loi usuelle, nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous plutôt que de regarder le rapport $\frac{p(\tilde\beta|y,\alpha,\theta)}{p(\beta^{(k-1)}|y,\alpha,\theta)}$ nous allons regarder $log(p(\tilde\beta|y,\alpha,\theta))-log(p(\beta^{(k-1)}|y,\alpha,\theta))$.
+
+$$
+ln(p(\beta|y,\alpha,\theta)) = -ln(\beta) -\frac{(ln(\beta)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
+$$
+
+Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2} $ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\beta} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\beta}) - \frac{ln(1 + \frac{\sigma_{\beta}}{\mu_{\beta}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\beta}{\mu_\beta^2}+1)}$.
+
+
+2. $\mathcal{Uniforme}(a,b)$
+$$
+p(\beta|y,\alpha,\theta) = L(y|\alpha,\beta,\theta) \times p(\beta)\\
+p(\beta|y,\alpha,\theta) \propto 1_{\beta\in[a,b]} \prod\frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
+$$
+Nous ne reconnaissons pas de forme de loi usuelle, nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous plutôt que de regarder le rapport $\frac{p(\tilde\beta|y,\alpha,\theta)}{p(\beta^{(k-1)}|y,\alpha,\theta)}$ nous allons regarder $log(p(\tilde\beta|y,\alpha,\theta))-log(p(\beta^{(k-1)}|y,\alpha,\theta))$.
+
+$$
+ln(p(\beta|y,\alpha,\theta)) = \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante si } \beta\in[a,b], -\infty \text{ sinon.}
+$$
+
+Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $b$ pour la uniforme mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{Uniforme}(a,b)] = \frac{a+b}{2} $ et $Var(\mathcal{Uniforme}(a,b)) = \sigma_{\beta} = \frac{(a-b)^2}{12}$ on a alors : $a = \mu_\beta-\sqrt{3\sigma_\beta}$ et $b = \mu_\beta+\sqrt{3\sigma_\beta}$.
+
+### Remarque
+Pour $\alpha$ et pour $\beta$, nous faisons le choix dans l'algorithme de Metropolis-Hasting de choisir comme distribution instrumentale une loi normale centrée en $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$ afin de se ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ ou $\tilde\beta$ et l'ancienne valeur $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$, avec $\tau_{\alpha}$ et $\tau_{\beta}$ comme variance pour chacune des normales.
 
 ## Fonctions
 
@@ -168,7 +388,7 @@ logpost_alpha_lognormale <- function(alpha, y, t_insp, beta, theta, mu_alpha, si
 ## Gamma(k,s)
 logpost_alpha_gamma <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha){
   k <- mu_alpha^2/sigma_alpha
-  s <- sigma_alpha/mu_alpha  
+  s <- mu_alpha/sigma_alpha
 
   list_ki <- func_list_ki(alpha, beta, t_insp)
 
@@ -200,6 +420,7 @@ logpost_beta_unif <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta
 ```
 
 ### Fonction algorithme de Gibbs-Metropolis-Hastings
+[Mettre pseudo code de la fonction] avec explication "mathématiques".
 ```{r}
 algo_Gibbs_Metropolis_Hastings <- function(logpost_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
                                            logpost_beta,mu_beta,sigma_beta,tau_beta,beta0,
@@ -344,18 +565,16 @@ simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,
 
 
 ```{r}
-
-
 logpost_alpha <- logpost_alpha_gamma
 mu_alpha <- alpha+0.01
 sigma_alpha <- 1
-tau_alpha <- 0.5
+tau_alpha <- 0.1
 alpha0 <- mu_alpha
 
 logpost_beta <- logpost_beta_lognormale
 mu_beta <- beta+0.01
 sigma_beta <- 1
-tau_beta <- 0.5
+tau_beta <- 0.1
 beta0 <- mu_beta
 
 mu_theta <- theta+0.01
@@ -364,7 +583,7 @@ theta0 <- mu_theta
 
 data <- simulations1$X_insp
 t_insp <- simulations1$t_insp
-K <- 1000
+K <- 10000
 burnin <- 100
 
 res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
@@ -382,10 +601,9 @@ Fixer un alpha, beta et theta.
 Pour chaque coombinaison de lois a priori Faire grille avec chaque cas de figure (expert bon ou mauvais, confiance faible ou élevée). (ggarance 2 cols 2 lignes)
 Visualisation avec titre commun les vrais paramètres et lois a priori choisies, titre perso avec cas de figure expert et simulations avec vrais paramètres et simulations avec paramètres estimés bayes et simulations avec MLE.
 
--> Graphe de convergence pour chaque estimateur.
 
 Commentaire :
-Il est important de vérifier la convergence de GMH et de MLE (GMH en faisant le plot de res_param et voir si bcp oscillations ou pas et pour MLE avec converged )
+Il est important de vérifier la convergence de GMH et de MLE (GMH en faisant le plot de res_param et voir si bcp oscillations ou pas et pour MLE avec converged).
 
 
 
