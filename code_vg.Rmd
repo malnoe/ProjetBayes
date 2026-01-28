@@ -260,7 +260,7 @@ Faire le lien avec les maths / la théorie.
 
 # Etude de l'inférence bayésienne
 
-## Théorie
+## Contexte, choix des lois a priori et calcul des lois a posteriori conditionnelles
 Nous disposons d'un échantillon d'inspections du niveau de dégradation $x = \{x_0,\dots,x_n\}$ à différents temps d'inspection $t = \{t_0,\dots,t_n\}$ qui sont issus d'un processus gamma non-homogène de paramètres $\alpha,\:\beta$ et $\theta$ où les incréments sont positifs et indépendants. [Mettre le reste de l'énoncé].
 
 Nous souhaitons réaliser une estimation bayésienne des trois paramètres $\alpha,\:\beta$ et $\theta$, nous sommes donc dans le cas d'une estimation multidimensionnelle. Pour réaliser l'estimation, nous passons donc par les algorithmes de Gibbs et de Metropolis-Hasting en testant différentes combinaisons de loi a priori pour $\alpha,\:\beta$ et $\theta$.
@@ -307,7 +307,7 @@ $$
 ln(p(\alpha|y,\beta,\theta)) = -ln(\alpha) -\frac{(ln(\alpha)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
 $$
 
-Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2} $ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\alpha} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\alpha}) - \frac{ln(1 + \frac{\sigma_{\alpha}}{\mu_{\alpha}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\alpha}{\mu_\alpha^2}+1)}$.
+Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2}$ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\alpha} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\alpha}) - \frac{ln(1 + \frac{\sigma_{\alpha}}{\mu_{\alpha}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\alpha}{\mu_\alpha^2}+1)}$.
 
 2. $\mathcal{Gamma}(k,s)$
 $$
@@ -320,7 +320,7 @@ Nous ne reconnaissons pas de forme de loi usuelle, nous allons donc utiliser l'a
 $$
 ln(p(\alpha|y,\beta,\theta)) = (k-1)ln(\alpha)-\alpha/s + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
 $$
-Nous supposons également que l'expert ne nous donnerai pas directement $k$ et $s$ pour la gamma mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{Gamma}(k,s)] = \frac{k}{s} $ et $Var(\mathcal{Gamma}(k,s)) = \sigma_{\alpha} = \frac{k}{s^2}$ on a alors : $k = \frac{\mu_\alpha^2}{\sigma_\alpha}$ et $s = \frac{\sigma_\alpha}{\mu_\alpha}$.
+Nous supposons également que l'expert ne nous donnerai pas directement $k$ et $s$ pour la gamma mais plutôt une estimation du paramètre $\alpha$ : $\mu_{\alpha}$ associé à une certaine confiance : $\sigma_{\alpha}$. En supposant que $\mu_{\alpha} = \mathbb{E}[\mathcal{Gamma}(k,s)] = \frac{k}{s}$ et $Var(\mathcal{Gamma}(k,s)) = \sigma_{\alpha} = \frac{k}{s^2}$ on a alors : $k = \frac{\mu_\alpha^2}{\sigma_\alpha}$ et $s = \frac{\sigma_\alpha}{\mu_\alpha}$.
 
 ### Calcul des lois a posteriori pour $\beta$
 1. $\mathcal{LogNormale}(\mu,\sigma)$
@@ -336,7 +336,7 @@ $$
 ln(p(\beta|y,\alpha,\theta)) = -ln(\beta) -\frac{(ln(\beta)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
 $$
 
-Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2} $ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\beta} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\beta}) - \frac{ln(1 + \frac{\sigma_{\beta}}{\mu_{\beta}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\beta}{\mu_\beta^2}+1)}$.
+Nous supposons également que l'expert ne nous donnerai pas directement $\mu$ et $\sigma$ pour la lognormale mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{LogNormale}(\mu,\sigma)] = e^{\mu+\sigma^2/2}$ et $Var(\mathcal{LogNormale}(\mu,\sigma)) = \sigma_{\beta} = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$ on a alors : $\mu = ln(\mu_{\beta}) - \frac{ln(1 + \frac{\sigma_{\beta}}{\mu_{\beta}^2})}{2}$ et $\sigma =\sqrt{ln(\frac{\sigma_\beta}{\mu_\beta^2}+1)}$.
 
 
 2. $\mathcal{Uniforme}(a,b)$
@@ -350,7 +350,7 @@ $$
 ln(p(\beta|y,\alpha,\theta)) = \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante si } \beta\in[a,b], -\infty \text{ sinon.}
 $$
 
-Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $b$ pour la uniforme mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{Uniforme}(a,b)] = \frac{a+b}{2} $ et $Var(\mathcal{Uniforme}(a,b)) = \sigma_{\beta} = \frac{(a-b)^2}{12}$ on a alors : $a = \mu_\beta-\sqrt{3\sigma_\beta}$ et $b = \mu_\beta+\sqrt{3\sigma_\beta}$.
+Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $b$ pour la uniforme mais plutôt une estimation du paramètre $\beta$ : $\mu_{\beta}$ associé à une certaine confiance : $\sigma_{\beta}$. En supposant que $\mu_{\beta} = \mathbb{E}[\mathcal{Uniforme}(a,b)] = \frac{a+b}{2}$ et $Var(\mathcal{Uniforme}(a,b)) = \sigma_{\beta} = \frac{(a-b)^2}{12}$ on a alors : $a = \mu_\beta-\sqrt{3\sigma_\beta}$ et $b = \mu_\beta+\sqrt{3\sigma_\beta}$.
 
 ### Remarque
 Pour $\alpha$ et pour $\beta$, nous faisons le choix dans l'algorithme de Metropolis-Hasting de choisir comme distribution instrumentale une loi normale centrée en $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$ afin de se ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ ou $\tilde\beta$ et l'ancienne valeur $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$, avec $\tau_{\alpha}$ et $\tau_{\beta}$ comme variance pour chacune des normales.
