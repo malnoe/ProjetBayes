@@ -21,11 +21,12 @@ geometry: margin = 1.5 cm
 \newpage
 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 # Packages nécessaires
 library(ggplot2)
 library(ggpubr)
 library(GGally)
+library(invgamma)
 ```
 
 
@@ -143,14 +144,6 @@ plot_sim4 <- plot_simulations(
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
 Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 20 000) à $\alpha$ : plus il est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
-
-Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à alpha :
-0.1 -> 2000
-1 -> 20.000
-10 -> 200.000
-20 -> 400.000
-Faire le lien avec les maths / la théorie.
-Dégradations + rapide avec alpha + grand.
 \
 
 ## *Variations de $\beta$*
@@ -246,12 +239,6 @@ ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
 Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins fort que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 20 000 pour $\alpha$ **(\@ref(fig:SimTheta))**.
 
-Commentaire : Pas d'impact sur la forme de la courbe seulement sur les valeurs prises par Xt. Proportionnel à theta :
-0.5 -> 50
-1 -> 100
-2 -> 200
-Dégradation + rapide avec theta + grand
-Faire le lien avec les maths / la théorie.
 \
 \
 
@@ -290,7 +277,7 @@ p(\theta|y,\alpha,\beta) = L(y|\alpha,\beta,\theta) \times p(\theta)\\
 p(\theta|y,\alpha,\beta) \propto \theta^{\sum-k_i(\alpha,\beta)}exp(-\frac{\sum y_i}{\theta})\theta^{-(a+1)}exp(-\frac{b}{\theta})\\
 p(\theta|y,\alpha,\beta) \propto \theta^{-(\sum k_i(\alpha,\beta)+a+1)}exp(-\frac{\sum y_i + beta}{\theta})
 $$
-Nous pouvons reconnaitre, à une constante de normalisation prêt, la densité d'une $\mathcal{Invgamma}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons estimer $\theta$ avec un algorithme de $Gibbs$.
+Nous pouvons reconnaitre, à une constante de normalisation prêt, la densité d'une $\mathcal{Invgamma}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons estimer $\theta$ avec un algorithme de Gibbs.
 Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $b$ pour l'Invgamma mais plutôt une estimation du paramètre $\theta$ : $\mu_{\theta}$ associé à une certaine confiance : $\sigma_{\theta}$. En supposant que $\mu_{\theta} = \mathbb{E}[\mathcal{Invgamma}(a,b)] = \frac{b}{a-1}$ et $Var(\mathcal{Invgamma}(a,b)) = \sigma_{\theta} = \frac{b^2}{(a-1)^2(a-2)}$ on a alors : $a = \frac{\mu_{\theta}^2}{\sigma_{\theta}}+2$ et $b = (a-1)\mu_{\theta}$.
 [Je peux détailler les calculs si besoin mais bon, c'est pas super central ici...]
 
@@ -356,10 +343,6 @@ Nous supposons également que l'expert ne nous donnerai pas directement $a$ et $
 Pour $\alpha$ et pour $\beta$, nous faisons le choix dans l'algorithme de Metropolis-Hasting de choisir comme distribution instrumentale une loi normale centrée en $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$ afin de se ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ ou $\tilde\beta$ et l'ancienne valeur $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$, avec $\tau_{\alpha}$ et $\tau_{\beta}$ comme variance pour chacune des normales.
 
 ## Fonctions
-
-```{r}
-library(invgamma)
-```
 
 ### Fonctions utiles, calcul du log des loi a posteriori
 
@@ -452,8 +435,10 @@ algo_Gibbs_Metropolis_Hastings <- function(logpost_alpha,mu_alpha,sigma_alpha,ta
   y <- data[2:length(data)] - data[1:length(data)-1]
   n <- length(y)
   
-  # Calcul du a et b de l'inverse gamma pour simuler theta à partir de esp_theta et de var_theta
+  # Calcul du a et b de l'inverse gamma pour simuler theta
+  # à partir de moy = mu_theta et de var=sigma_theta
   a_theta <- mu_theta^2/sigma_theta+2
+  
   b_theta <- (a_theta-1)*mu_theta
   
   # Initialisation des vecteurs de résultats
@@ -468,12 +453,13 @@ algo_Gibbs_Metropolis_Hastings <- function(logpost_alpha,mu_alpha,sigma_alpha,ta
   for(k in 2:(K+1)){
     # 1. Simulation de theta^(k)
       # Calcul des k_i = alpha(ti^beta - ti-1^beta) avec alpha=alpha^(k-1) et beta=beta^(k-1)
-    list_ki <- res_alpha[k-1]*(t_insp[2:(n+1)]^res_beta[k-1]-t_insp[1:n]^res_beta[k-1])
+    list_ki <- func_list_ki(res_alpha[k-1],res_beta[k-1],t_insp)
       # Calcul de a_bis = a + somme ki
     a_bis <- a_theta+sum(list_ki)
       # Calcul de b_bis = b + somme yi
     b_bis <- b_theta+sum(y)
-    res_theta[k]  <- rinvgamma(1,shape=a_bis,rate=b_bis)
+    theta_hat_moment <- sum(y) / sum(list_ki)
+    res_theta[k]  <- 1 / rgamma(1, shape = a_bis, rate = b_bis)
     
     # 2. Simulation de alpha^(k) (MH)
     alpha_tilde <- rnorm(1, mean = res_alpha[k-1], sd = tau_alpha)
@@ -506,12 +492,13 @@ algo_Gibbs_Metropolis_Hastings <- function(logpost_alpha,mu_alpha,sigma_alpha,ta
   # Résultat avec burnin
   return(list(res_theta=tail(res_theta,n=K-burnin),
               res_alpha=tail(res_alpha,n=K-burnin),
-              res_beta=tail(res_beta,n=K-burnin)))
+              res_beta=tail(res_beta,n=K-burnin))
+    )
   
 }
 ```
 
-### Fonction calcul des estimateurs de vraisemblance par optimisation
+### Fonction calcul des estimateurs du maximum de vraisemblance par optimisation
 
 ```{r}
 # - vraisemblance à minimiser pour trouver les MLE.
@@ -550,7 +537,144 @@ mle <- function(alpha0, beta0, theta0, data, t_insp){
 }
 ```
 
+### Fonction de visualisation
+```{r}
+visualisation_resultat <- function(res_GMH,res_MLE,simulations_originales,subtitle=""){
+  # Récupérer les informations de horizon, dt_insp, dt_sim de simulations originales
+  horizon <- simulations_originales$grille_sim[length(simulations_originales$grille_sim)]
+  dt_sim <- simulations_originales$grille_sim[2]-simulations_originales$grille_sim[1]
+  dt_insp <- simulations_originales$grille_insp[2]-simulations_originales$grille_ins[1]
+  
+  # Extraire de res_GMH les alpha, beta et theta estimés
+  alpha_GMH <- mean(res_GMH$res_alpha)
+  beta_GMH <- mean(res_GMH$res_beta)
+  theta_GMH <- mean(res_GMH$res_theta)
+  # Faire simulations_GMH avec la fonction de simulation et les alpha,beta,theta_GMH
+  simulations_GMH <- simulations(horizon,dt_sim,dt_insp,alpha=alpha_GMH,beta=beta_GMH,theta=theta_GMH)
+  
+  # Extraire de res_MLE les alpha, beta et theta estimés
+  alpha_MLE <- res_MLE$alpha
+  beta_MLE <- res_MLE$beta
+  theta_MLE <- res_MLE$theta
+  # Faire simulations_MLE avec la fonction de simulation et les alpha,beta,theta_MLE
+  simulations_MLE <- simulations(horizon,dt_sim,dt_insp,alpha=alpha_MLE,beta=beta_MLE,theta=theta_MLE)
+  
+  # df_long avec grille_sim,X_sim,X_sim_GMH,X_sim_RLE
+  df_long <- data.frame(grille_sim=simulations_originales$grille_sim,
+                            X_sim=simulations_originales$X_sim,
+                            X_sim_GMH=simulations_GMH$X_sim,
+                            X_sim_MLE=simulations_MLE$X_sim)
+  
+  # ggplot avec les deux df_long avec 3 couleurs pour original, GMH et MLE.
+  ggplot() +
+    geom_line(
+      aes(x = df_long$grille_sim, y = df_long$X_sim, 
+          col = "Données originales")
+      ) + 
+    geom_line(
+      aes(x = df_long$grille_sim, y = df_long$X_sim_GMH, 
+          col = "Estimations bayésiennes")
+      ) + 
+    geom_line(
+      aes(x = df_long$grille_sim, y = df_long$X_sim_MLE, 
+          col = "Estimation maximum de vraissemblance")
+      ) + 
+    scale_color_manual(
+      name = "A",
+      values = c("Données originales" = "#dc0217",
+                 "Estimations bayésiennes" = "#49a86c",
+                 "Estimation maximum de vraissemblance" = "#428290" ),
+    ) +
+    labs(x = "t", y = expression(X[t]), subtitle = subtitle) +
+    theme_light() +
+    theme(
+      axis.title = element_text(size = 10, face = "bold"),
+      axis.text = element_text(size = 8),
+      panel.border = element_blank(),
+      axis.line = element_line(colour = "darkgrey"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey85"),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 8),
+      legend.position = "right"
+    )
+  
+}
+
+```
+
+
 ## Résultats
+
+### $\beta$ <1, cas concave
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+alpha <- 1
+beta <- 0.5
+theta <- 2
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=theta)
+
+# Expert bon et confiance
+mu_alpha <- alpha+0.2
+sigma_alpha <- 1
+tau_alpha <- 0.3
+alpha0 <- mu_alpha
+
+mu_beta <- beta+0.2
+sigma_beta <- 1
+tau_beta <- 0.3
+beta0 <- mu_beta
+
+mu_theta <- theta+0.2
+sigma_theta <- 1
+theta0 <- mu_theta
+
+data <- simulations1$X_insp
+t_insp <- simulations1$grille_insp
+K <- 10000
+
+# 1. alpha~lognormale et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot1 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~lognormale")
+
+# 2. alpha~gamma et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot2 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~lognormale")
+
+# 3. alpha~lognormale et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot3 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~unif")
+
+# 4. alpha~gamma et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot4 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~unif")
+
+ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
+```
+### $\beta$ =1, cas linéaire
 
 ```{r}
 set.seed(1)
@@ -558,48 +682,138 @@ set.seed(1)
 dt_sim <- 0.01
 dt_insp <- 5
 alpha <- 1
-beta <- 2
+beta <- 1
 theta <- 2
 simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=theta)
-```
 
-
-```{r}
-logpost_alpha <- logpost_alpha_gamma
-mu_alpha <- alpha+0.01
+# Expert bon et confiance
+mu_alpha <- alpha+0.2
 sigma_alpha <- 1
-tau_alpha <- 0.1
+tau_alpha <- 0.3
 alpha0 <- mu_alpha
 
-logpost_beta <- logpost_beta_lognormale
-mu_beta <- beta+0.01
+mu_beta <- beta+0.2
 sigma_beta <- 1
-tau_beta <- 0.1
+tau_beta <- 0.3
 beta0 <- mu_beta
 
-mu_theta <- theta+0.01
+mu_theta <- theta+0.2
 sigma_theta <- 1
 theta0 <- mu_theta
 
 data <- simulations1$X_insp
-t_insp <- simulations1$t_insp
+t_insp <- simulations1$grille_insp
 K <- 10000
-burnin <- 100
+burnin <- 1000
 
-res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha,mu_alpha,sigma_alpha,tau_alpha,alpha0,
-                                           logpost_beta,mu_beta,sigma_beta,tau_beta,beta0,
+# 1. alpha~lognormale et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
                                            mu_theta,sigma_theta,theta0,
                                            data,t_insp,K,burnin)
-
 res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot1 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~lognormale")
+
+# 2. alpha~gamma et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot2 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~lognormale")
+
+# 3. alpha~lognormale et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot3 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~unif")
+
+# 4. alpha~gamma et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot4 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~unif")
+
+ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
 
+### $\beta$ >1, cas convexe
+```{r}
+set.seed(1)
+# Simulations 1
+dt_sim <- 0.01
+dt_insp <- 5
+alpha <- 1
+beta <- 3
+theta <- 2
+simulations1 <- simulations(dt_sim=dt_sim,dt_insp=dt_insp,alpha=alpha,beta=beta,theta=theta)
 
+# Expert bon et confiance
+mu_alpha <- alpha+0.2
+sigma_alpha <- 1
+tau_alpha <- 0.3
+alpha0 <- mu_alpha
 
-Visualisations :
-Fixer un alpha, beta et theta.
-Pour chaque coombinaison de lois a priori Faire grille avec chaque cas de figure (expert bon ou mauvais, confiance faible ou élevée). (ggarance 2 cols 2 lignes)
-Visualisation avec titre commun les vrais paramètres et lois a priori choisies, titre perso avec cas de figure expert et simulations avec vrais paramètres et simulations avec paramètres estimés bayes et simulations avec MLE.
+mu_beta <- beta+0.2
+sigma_beta <- 1
+tau_beta <- 0.3
+beta0 <- mu_beta
+
+mu_theta <- theta+0.2
+sigma_theta <- 1
+theta0 <- mu_theta
+
+data <- simulations1$X_insp
+t_insp <- simulations1$grille_insp
+K <- 10000
+burnin <- 1000
+
+# 1. alpha~lognormale et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot1 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~lognormale")
+
+# 2. alpha~gamma et beta~lognormale
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_lognormale,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot2 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~lognormale")
+
+# 3. alpha~lognormale et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_lognormale,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot3 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~lognormale et beta~unif")
+
+# 4. alpha~gamma et beta~unif
+res_GMH <- algo_Gibbs_Metropolis_Hastings(logpost_alpha_gamma,mu_alpha,sigma_alpha,tau_alpha,alpha0,
+                                           logpost_beta_unif,mu_beta,sigma_beta,tau_beta,beta0,
+                                           mu_theta,sigma_theta,theta0,
+                                           data,t_insp,K,burnin)
+res_MLE <- mle(alpha0,beta0,theta0,data,t_insp)
+
+plot4 <- visualisation_resultat(res_GMH,res_MLE,simulations1,subtitle="alpha~gamma et beta~unif")
+
+ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
+```
 
 
 Commentaire :
