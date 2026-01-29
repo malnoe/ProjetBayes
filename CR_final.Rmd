@@ -33,10 +33,10 @@ library(invgamma)
 
 
 # **Introduction**
-À partir d'un processus gamma non homogène simulé, nous voulons construire une inférence bayésienne permettant de retrouver les paramètres du dit processus.
-Nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous posons aussi, pour tout $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$ et, pour tout $x \in \mathbb{R}_+$, $\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}$. \
-L'inférence bayésienne va donc nous servir à retrouver 3 paramètres : $\alpha,\ \beta \text{ et } \theta$.
-Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs pour $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, et ii) l'étude de l'inférence bayésienne.
+Nous souhaitons ici étudier un processus gamma X non homogène, et plus particulièrement ses paramètres.
+Pour cela, nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous supposons aussi que, pour tous $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$ et nous posons alors, pour tout $x \in \mathbb{R}_+$, $\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}$. \
+Par la construction d'une inférence bayésienne, nous allons donc chercher à estimer les trois paramètres introduits $\alpha,\ \beta \text{ et } \theta$.
+Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs de $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, et ii) l'étude de la pertinence de l'inférence bayésienne, en la comparant notamment à l'estimation par maximum de vraisemblance.
 \
 \
 
@@ -44,7 +44,7 @@ Afin d'analyser la pertinence de l'approche bayésienne face à un problème de 
 # **Simulations du processus**
 Afin de vérifier l'effet théorique de chaque paramètre sur le processus, nous regardons individuellement l'impact de chacun. Pour cela, nous définissons 2 fonctions qui vont nous permettre de réaliser les simulations tout au long de ce rapport : 
 
-  - La fonction `simulations`, qui prend en entrée les paramètres $\alpha,\ \beta \text{ et } \theta$ du processus gamma ainsi que la taille des pas de simulation et d'inspection, et qui retourne une liste des grilles (simulation et inspection) et du processus observé sur celles-ci (simulation et inspection).
+  - La fonction `simulations`, qui prend en entrée les paramètres $\alpha,\ \beta \text{ et } \theta$ du processus gamma ainsi que la taille des pas de simulation et d'inspection, et qui retourne une liste des grilles de pas (simulation et inspection) et du processus simulé à partir de celles-ci (simulation et inspection).
   - La fonction `plot_simulations`, qui prend en entrée la sortie de `simulations` et qui retourne le graphique du processus associé, en distinguant les points simulés des points inspectés.
 ```{r}
 # Fonction pour simuler un processus gamma
@@ -98,7 +98,7 @@ plot_simulations <- function(simulations, subtitle = "") {
 \
 
 ## *Variations de $\alpha$*
-Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.
+Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{0.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.
 ```{r SimAlpha, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\beta = 1$, $\\theta = 2$) pour différents $\\alpha$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -139,7 +139,7 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 20 000) à $\alpha$ : plus il est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
+Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 20 000) à $\alpha$ : plus le paramètre est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
 \
 
 ## *Variations de $\beta$*
@@ -186,13 +186,13 @@ ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
 Comme attendu, l'effet de $\beta$ varie selon l'intervalle de valeurs dans lequel il se trouve :
 
-  - Pour un $\beta < 1$, la courbe et concave, i.e. la dégradation ralenti au cours du temps.
+  - Pour un $\beta < 1$, la courbe est concave, i.e. la dégradation ralentit au cours du temps.
   - Pour $\beta = 1$, la courbe est linéaire, i.e. la dégradation évolue toujours de la même manière au cours du temps.
-  - Pour un $\beta > 1$, la courbe est concave, i.e. la dégradation s'accélère au cours du temps. Nous constatons d'ailleurs que, plus $\beta$ est grand, plus l'accélération de dégradation est forte **(\@ref(fig:SimBeta))**.
+  - Pour un $\beta > 1$, la courbe est convexe, i.e. la dégradation s'accélère au cours du temps. Nous constatons d'ailleurs que, plus $\beta$ est grand, plus l'accélération de dégradation est forte (différence entre $\beta = 2$ et $\beta = 3$) **(\@ref(fig:SimBeta))**.
 \
 
 ## *Variations de $\theta$*
-Observons maintenant l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.
+Observons finalement l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.
 ```{r SimTheta, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\beta = 1$) pour différents $\\theta$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -233,23 +233,23 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins fort que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 20 000 pour $\alpha$ **(\@ref(fig:SimTheta))**.
+Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent encore une fois être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins fort que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 20 000 pour $\alpha$ **(\@ref(fig:SimTheta))**.
 \
 \
 
 
 # **Étude de l'inférence bayésienne**
 ## *Contexte*
-Nous disposons maintenant d'un échantillon d'inspection du niveau de dégradation $x = \{x_0,\dots,x_n\}$, obtenu à différents temps d'inspection $t = \{t_0,\dots,t_n\}$ et issus d'un processus gamma non-homogène de paramètres $\alpha,\ \beta \text{ et } \theta$.
-Nous souhaitons alors mettre en place une inférence bayésienne multidimensionnelle afin d'estimer ses trois paramètres d'intérêts. Nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting en testant différentes combinaisons de loi a priori. Les trois paramètres étant positifs, et afin de se fixer un cadre d'étude pertinent \textcolor{red}{et assez court (à reformuler)}, nous restreignons le choix des lois théoriques de chaque paramètre à des lois à support positif :
+Nous supposons maintenant que nous disposons d'un échantillon d'inspection du niveau de dégradation $x = \{x_0,\ \dots ,\ x_n\}$, obtenu à différents temps d'inspection $t = \{t_0,\ \dots,\ t_n\}$ et issus d'un processus gamma non-homogène de paramètres $\alpha,\ \beta \text{ et } \theta$.
+Nous souhaitons alors mettre en place une inférence bayésienne multidimensionnelle afin d'estimer ces trois paramètres d'intérêts. Nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting en testant différentes combinaisons de loi a priori. Les trois paramètres étant positifs, nous restreignons le choix des lois théoriques de chaque paramètre à un certain nombre de lois à support positif :
 
   - Pour $\alpha$, nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi gamma* $\mathcal{G}(k,s)$.
   - Pour $\beta$ nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi uniforme* $\mathcal{U}(a,b)$.
-  - Pour $\theta$, nous testerons une *loi inverse Gamma* $\mathcal{I\textit{nv-}G}(a,b)$.
+  - Pour $\theta$, nous utiliserons toujours une *loi inverse Gamma* $\mathcal{I\textit{nv-}G}(a,b)$.
 
-Nous supposons aussi par la suite que l'expert nous indique toujours une estimation $\mu$ du paramètre à estimer (et non des paramètres de sa loi a priori) à laquelle nous associons une certaine confiance $\sigma$. Le but de cette étude étant plutôt de constater de l'impact du choix des valeurs et des lois de chaque paramètre, nous fixerons toujours $\mu$ et $\sigma$ dans un cadre où nous avons un bon expert et où nous lui faisons confiance, i.e. $\mu$ ne sera pas très loin de la vraie valeur du paramètre, et $\sigma$ sera assez "petit". \
+Nous supposons aussi par la suite que l'expert nous indique toujours une estimation $\mu_{exp}$ du paramètre à estimer (et non des paramètres de sa loi a priori) à laquelle nous associons une certaine confiance $\sigma_{exp}$. Le but de cette étude étant plutôt d'observer l'impact du choix des valeurs et des lois de chaque paramètre, nous fixerons toujours $\mu_{exp}$ et $\sigma_{exp}$ en partant du principe que nous avons un bon expert à qui nous faisons confiance, i.e. $\mu_{exp}$ ne sera pas très loin de la vraie valeur du paramètre et $\sigma_{exp}$ sera assez "petit". \
 
-Afin de juger de la pertinence de l'approche bayésienne, nous allons ses estimations à celles obtenues par l'approche du maximum de vraisemblance. Afin de pouvoir réaliser cette comparaison, nous calculons donc la vraisemblance du modèle.
+Afin de juger de la pertinence de l'approche bayésienne, nous allons comparer ses estimations à celles obtenues par l'approche du maximum de vraisemblance. Nous calculons donc la vraisemblance du modèle.
 
 Pour l'ensemble des lois, nous allons plutôt travailler avec les incréments $y_i = x_i - x_{i-1} = x_{(t_i)} - x_{(t_{i-1})},\ i\in\{1,\dots,n\}$. 
 Nous posons également $k_i(\alpha, \beta) = a_{(t_i)} - a_{(t_{i-1})} = \alpha(t_i^\beta - t_{i-1}^\beta)$ afin d'alléger les calculs suivants.
@@ -266,11 +266,13 @@ L(y | \alpha,\beta,\theta) &= \prod^n_{i=1} f(y_i | k_i(\alpha,\beta),\theta) \\
 &= \prod^n_{i=1} \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)-1}e^{\frac{y_i}{\theta}}
 \end{aligned}
 $$
+
+Afin de réaliser l'inférence bayésienne, nous calculons maintenant les différentes lois a posteriori avec lesquelles nous allons être amenés à travailler.
 \
 
 
 ### Calcul de la loi a posteriori pour $\theta$
-Nous avons choisi comme loi a priori pour $\theta$ une $\mathcal{I\textit{nv}G}(a,b)$. Ainsi :
+Nous avons choisi comme loi a priori pour $\theta$ une $\mathcal{I\textit{nv-}G}(a,b)$. Ainsi :
 
 $$
 \begin{aligned}
@@ -279,9 +281,9 @@ p(\theta|y,\alpha,\beta) &= L(y|\alpha,\beta,\theta) \times p(\theta) \\
 &\propto \theta^{-(\sum k_i(\alpha,\beta)+a+1)} e^{-\frac{\sum y_i + \beta}{\theta}}
 \end{aligned}
 $$
-Nous pouvons reconnaître, à une constante de normalisation prêt, la densité d'une $\mathcal{I\textit{nv}G}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons donc estimer $\theta$ avec un algorithme de Gibbs.
+Nous pouvons reconnaître, à une constante de normalisation prêt, la densité d'une $\mathcal{I\textit{nv-}G}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons donc estimer $\theta$ avec un algorithme de Gibbs.
 
-En supposant que les paramètres d'expert $\mu_{\theta} \text{ et } \sigma_{\theta}$ correspondent à $\mu_{\theta} = \mathbb{E}[\mathcal{I\textit{nv}G}(a,b)] = \frac{b}{a-1}$ et que $\sigma_{\theta} = Var(\mathcal{I\textit{nv}G}(a,b)) = \frac{b^2}{(a-1)^2(a-2)}$, nous avons alors :
+En supposant que les paramètres d'expert $\mu_{\theta} \text{ et } \sigma_{\theta}$ correspondent à $\mu_{\theta} = \mathbb{E}[\mathcal{I\textit{nv-}G}(a,b)] = \frac{b}{a-1}$ et $\sigma_{\theta} = Var(\mathcal{I\textit{nv-}G}(a,b)) = \frac{b^2}{(a-1)^2(a-2)}$, nous avons alors :
 $$
 \left\{\begin{array}{ll}
 a = \frac{\mu_{\theta}^2}{\sigma_{\theta}}+2 &. \\
@@ -294,16 +296,15 @@ $$
 ### Calcul des lois a posteriori pour $\alpha$
   1. Calcul pour une $\mathcal{L\textit{og-}N}(\mu,\sigma)$.
 
-Nous avons :
 $$
 \begin{aligned}
-p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
+\text{Nous avons :} \quad p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
 &\propto \frac{1}{\alpha\sigma\sqrt{2\pi}} e^{-\frac{(ln(\alpha)-\mu)^2}{2\sigma^2}} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
 Comme nous ne reconnaissons pas de forme de loi usuelle, nous allons utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
 $$
-ln(p(\alpha|y,\beta,\theta)) = -ln(\alpha) -\frac{(ln(\alpha)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
+ln(p(\alpha|y,\beta,\theta)) = -ln(\alpha) -\frac{(ln(\alpha)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste}
 $$
 
 En supposant que les paramètres d'expert $\mu_{\alpha} \text{ et } \sigma_{\alpha}$ correspondent à $\mu_{\alpha} = \mathbb{E}[\mathcal{L\textit{og-}N}(\mu,\sigma)] = e^{\frac{\mu+\sigma^2}{2}}$ et $\sigma_{\alpha} = Var(\mathcal{L\textit{og-}N}(\mu,\sigma)) = (e^{\sigma^2}-1)e^{2\mu+\sigma^2}$, nous avons alors :
@@ -317,22 +318,21 @@ $$
 
   2. Calcul pour une $\mathcal{G}(k,s)$.
 
-Nous avons :
 $$
 \begin{aligned}
-p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha)\\
+\text{Nous avons :} \quad p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
 &\propto \frac{1}{\Gamma(k)s^k} \alpha^{k-1}e^{-\alpha/s} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
 Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
 $$
-ln(p(\alpha|y,\beta,\theta)) = (k-1)ln(\alpha)-\frac{\alpha}{s} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + constante}
+ln(p(\alpha|y,\beta,\theta)) = (k-1)ln(\alpha)-\frac{\alpha}{s} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste}
 $$
 En supposant que les paramètres d'expert $\mu_{\alpha} \text{ et } \sigma_{\alpha}$ correspondent à $\mu_{\alpha} = \mathbb{E}[\mathcal{G}(k,s)] = \frac{k}{s}$ et $\sigma_{\alpha} = Var(\mathcal{G}(k,s)) = \frac{k}{s^2}$, nous avons alors :
 $$
 \left\{\begin{array}{ll}
-k = \frac{\mu_\alpha^2}{\sigma_\alpha} &.\\
-s = \frac{\sigma_\alpha}{\mu_\alpha}
+\displaystyle k = \frac{\mu_\alpha^2}{\sigma_\alpha} &.\\
+\displaystyle s = \frac{\sigma_\alpha}{\mu_\alpha}
 \end{array}\right.
 $$
 \
@@ -352,18 +352,17 @@ $$
 
   2. Calcul pour une $\mathcal{U}(a,b)$.
 
-Nous avons :
 $$
 \begin{aligned}
-p(\beta | y, \alpha, \theta) &= L(y | \alpha, \beta, \theta) \times p(\beta) \\
+\text{Nous avons :} \quad p(\beta | y, \alpha, \theta) &= L(y | \alpha, \beta, \theta) \times p(\beta) \\
 &\propto \mathbf{1}_{\beta\in[a,b]} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
 
 Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $log(p(\tilde\beta|y,\alpha,\theta))-log(p(\beta^{(k-1)}|y,\alpha,\theta))$ plutôt que le rapport $\frac{p(\tilde\beta|y,\alpha, \theta)}{p(\beta^{(k-1)}|y,\alpha,\theta)}$. Nous avons donc :
 $$
-\left\{\begin{array}{ll}
-ln(p(\beta | y, \alpha, \theta)) = \sum_{i=1}^n (k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste} &\text{si } \beta\in[a,b]. \\
+ln(p(\beta | y, \alpha, \theta)) =  \left\{\begin{array}{ll}
+\displaystyle \sum_{i=1}^n (k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste} &\text{si } \beta\in[a,b]. \\
 -\infty &\text{sinon}
 \end{array}\right.
 $$
@@ -379,13 +378,14 @@ $$
 
 
 ### Remarque
-Pour $\alpha$ et pour $\beta$, nous faisons le choix dans l'algorithme de Metropolis-Hasting de choisir comme distribution instrumentale une loi normale centrée en $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$ afin de se ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ ou $\tilde\beta$ et l'ancienne valeur $\alpha^{(k-1)}$ ou $\beta^{(k-1)}$. Nous notons alors $\tau_{\alpha}$ et $\tau_{\beta}$ la variance pour chacune des normales.
+Dans l'algorithme de Metropolis-Hasting, nous choisissons comme distribution instrumentale pour $\alpha$ (resp. $\beta$) une loi normale centrée en $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$) afin de se ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ (resp. $\tilde\beta$) et l'ancienne valeur $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$). Nous notons $\tau_{\alpha}$ (resp. $\tau_{\beta}$) la variance de cette loi.
 \
 
 ## *Fonctions*
-Afin de fluidifier notre analyse, nous avons implémenter une certains nombre de fonctions utiles à l'étude.
+Afin de fluidifier notre analyse, nous avons implémenté un certain nombre de fonctions utiles à l'étude.
 
 ### Lois a posteriori
+Nous avons implémenté une fonction pour chacune des lois a posteriori de $\alpha \text{ et } \beta$ calculées plus haut. Nous avons aussi implémenté une fonction pour calculer les $k_i(\alpha, \beta)$ introduits précédemment.
 ```{r}
 # Fonction de calcul des k_i
 func_list_ki <- function(alpha, beta, t_insp) {
@@ -393,7 +393,7 @@ func_list_ki <- function(alpha, beta, t_insp) {
   alpha * (t_insp[2:(n+1)]^beta - t_insp[1:n]^beta)
 }
 
-# Fonctions a posteriori pour alpha
+# Lois a posteriori pour alpha
 ### Log-normale(mu,sigma)
 logpost_alpha_lognormale <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_alpha) {
   mu <- log(mu_alpha) - 0.5 * log(1 + sigma_alpha/(mu_alpha^2))
@@ -411,7 +411,7 @@ logpost_alpha_gamma <- function(alpha, y, t_insp, beta, theta, mu_alpha, sigma_a
     sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
 }
 
-# Fonctions a posteriori pour beta
+# Lois a posteriori pour beta
 ### Log-normale(mu,sigma)
 logpost_beta_lognormale <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta) {
   mu <- log(mu_beta)- 0.5 * log(1 + sigma_beta/(mu_beta^2))
@@ -424,26 +424,29 @@ logpost_beta_lognormale <- function(beta, y, t_insp, alpha, theta, mu_beta, sigm
 logpost_beta_unif <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta) {
   a <- mu_beta - sqrt(3*sigma_beta)
   b <- mu_beta + sqrt(3*sigma_beta)
-  if(beta < a || beta > b) return(-Inf)
-  list_ki <- func_list_ki(alpha, beta, t_insp)
-  sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
+  if (beta < a || beta > b) {
+    -Inf
+  } else {
+    list_ki <- func_list_ki(alpha, beta, t_insp)
+    sum((list_ki - 1)*log(y) - list_ki*log(theta) - lgamma(list_ki))
+  }
 }
 ```
 \
 
 
 ### Algorithme de Gibbs-Metropolis-Hastings (GMH)
-La fonction `algo_GMH` implémente un algorithme MCMC de type Gibbs–Metropolis–Hastings (GMH) permettant d'obtenir K estimations bayésienne de chaque paramètre ($\alpha,\ \beta \text{ et } \theta$). Elle prend en entrée la liste d'arguments suivant :
+La fonction `algo_GMH` implémente un algorithme MCMC de type Gibbs–Metropolis–Hastings (GMH) permettant d'obtenir K estimations bayésiennes de chaque paramètre ($\alpha,\ \beta \text{ et } \theta$). Elle prend en entrée les arguments suivants :
 
-  - `logpost_par` : fonction pour le calcul de log(posteriori($\tilde{\texttt{par}}$)).
-  - `mu_par` : moyenne de l'expert pour le paramètre `par`.
-  - `sigma_par` : confiance en l'expert pour le paramètre `par`.
-  - `tau_par` : variation de la normale pour le paramètre `par`.
-  - `par0` : initialisation du paramètre `par` pour chaîne de markov.
-  - `data` : x_1, ..., x_n observations (à transformer en y_1, ..., y_n) les incréments.
-  - `t_insp` : t_1,...,t_n les temps d'inspection.
-  - `K` : nombre d'itérations des algorithmes.
-  - `burnin` : nombre d'itérations à supprimer au début.
+  - `logpost_par` la fonction utilisée pour calculer log(posteriori(`par`)), avec `par` un des paramètres du modèle.
+  - `mu_par` la moyenne de l'expert pour le paramètre `par`.
+  - `sigma_par` la confiance en l'expert pour le paramètre `par`.
+  - `tau_par` la variation de la normale pour le paramètre `par`.
+  - `par0` l'initialisation du paramètre `par` pour la chaîne de markov.
+  - `data` les $x_1,\ \dots,\ x_n$ observations (à transformer en y_1, ..., y_n) les incréments.
+  - `t_insp` les $t_1,\ \dots,\ t_n$ les temps d'inspection.
+  - `K` le nombre d'itérations des algorithmes.
+  - `burnin` le nombre d'itérations à supprimer au début.
   
 ```{r}
 algo_GMH <- function(
@@ -474,10 +477,9 @@ algo_GMH <- function(
     res_theta[k]  <- 1 / rgamma(1, shape = a_bis, rate = b_bis)
     # 2. Simulation de alpha^(k) (MH)
     alpha_tilde <- rnorm(1, mean = res_alpha[k-1], sd = tau_alpha)
-    if(alpha_tilde <= 0){
+    if (alpha_tilde <= 0) {
       res_alpha[k] <- res_alpha[k-1]
-    } 
-    else {
+    } else {
       first_log  <- logpost_alpha(
         alpha_tilde, y, t_insp, res_beta[k-1], res_theta[k], mu_alpha, sigma_alpha
       )
@@ -490,10 +492,9 @@ algo_GMH <- function(
     }
     # 3. Simulation de beta^(k) (MH)
     beta_tilde <- rnorm(1, mean = res_beta[k-1], sd = tau_beta)
-    if(beta_tilde <= 0){
+    if (beta_tilde <= 0) {
       res_beta[k] <- res_beta[k-1]
-    } 
-    else {
+    } else {
       first_log  <- logpost_beta(
         beta_tilde, y, t_insp, res_alpha[k], res_theta[k], mu_beta, sigma_beta
       )
@@ -517,9 +518,9 @@ algo_GMH <- function(
 
 
 ### Estimateurs du maximum de vraisemblance (MLE) par optimisation
-Afin d'obtenir les MLE, nous cherchons à minimiser $-ln(Vraisemblance)$. Nous implémentons donc d'abord une fonction permettant de retourner cette objet (`neg_vraisemblance`), puis nous implémentons une fonction permettant d'exhiber les MLE obtenus (`mle`).
+Afin d'obtenir les MLE, nous cherchons à minimiser $-ln(Vraisemblance)$. Nous implémentons donc d'abord une fonction permettant de retourner cet objet (`neg_vraisemblance`), puis nous implémentons une fonction permettant d'exhiber les MLE obtenus (`mle`).
 ```{r}
-# -Vraisemblance
+# -ln(Vraisemblance)
 neg_vraisemblance <- function(vect_param, y, t_insp) {
   alpha <- vect_param[1]
   beta  <- vect_param[2]
@@ -558,7 +559,7 @@ mle <- function(alpha0, beta0, theta0, data, t_insp) {
 
 
 ### Fonction de visualisation
-Nous implémentons finalement une fonction nous permettant de visualiser les résultat obtenus simultanément (`vis_res`). Elle nous permettra notamment de comparer les vrais données aux estimations bayésiennes et par maximum de vraisemblance.
+Nous implémentons finalement une fonction nous permettant de visualiser les résultats obtenus simultanément (`vis_res`). Elle nous permettra notamment de comparer les vraies données aux estimations bayésiennes et par maximum de vraisemblance.
 ```{r}
 vis_res <- function(res_GMH, res_MLE, sim_og, subtitle = "") {
   # Récupération des hyperparamètres de la simulation originale en jeu
