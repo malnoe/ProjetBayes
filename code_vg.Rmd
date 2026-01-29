@@ -40,7 +40,8 @@ L'inférence bayésienne va donc nous servir à retrouver 3 paramètres : $\alph
 Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en x phases : i) la simulation du processus selon différentes valeurs pour $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif, ii) la mise en place de l'inférence bayésienne et iii) l'étude de l'impact du pas d'inspection. \
 Afin de se fixer un cadre d'étude, nous restreignons les possibilités pour les lois théoriques de chaque paramètre :
 
-  - $\alpha$ et $\beta$ suivront chacun soit une loi *lognormale*, soit une loi *Gamma*.
+  - $\alpha$ suivra soit une loi *lognormale*, soit une loi *Gamma*.
+  - $\beta$ suivra soit une loi *lognormale*, soit une loi *Uniforme*.
   - $\theta$ suivra une loi *Inversegamma*.
 \
 \
