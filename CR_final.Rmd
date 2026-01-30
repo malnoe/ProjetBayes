@@ -311,13 +311,15 @@ $$
 ### Calcul des lois a posteriori pour $\alpha$
   1. Calcul pour une $\mathcal{L\textit{og-}N}(\mu,\sigma)$.
 
+Nous avons :
+
 $$
 \begin{aligned}
-\text{Nous avons :} \quad p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
+p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
 &\propto \frac{1}{\alpha\sigma\sqrt{2\pi}} e^{-\frac{(ln(\alpha)-\mu)^2}{2\sigma^2}} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
-Comme nous ne reconnaissons pas de forme de loi usuelle, nous allons utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
+Comme nous ne reconnaissons pas de forme de loi usuelle, nous allons utiliser l'algorithme de Metropolis-Hasting. Nous choisissons comme distribution instrumentale pour $\alpha$ une loi normale centrée en la valeur précédente de $\alpha$ dans la chaîne de Markov $\alpha^{(k-1)}$ afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ et l'ancienne valeur $\alpha^{(k-1)}$. Nous notons $\tau_{\alpha}$ la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
 $$
 ln(p(\alpha|y,\beta,\theta)) = -ln(\alpha) -\frac{(ln(\alpha)-\mu)^2}{2\sigma^2} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste}
 $$
@@ -339,7 +341,7 @@ $$
 &\propto \frac{1}{\Gamma(k)s^k} \alpha^{k-1}e^{-\alpha/s} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
-Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
+Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting.  Nous choisissons comme distribution instrumentale pour $\alpha$ une loi normale centrée en la valeur précédente de $\alpha$ dans la chaîne de Markov $\alpha^{(k-1)}$ afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ et l'ancienne valeur $\alpha^{(k-1)}$. Nous notons $\tau_{\alpha}$ la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses. Pour faciliter le calcul numérique, nous regardons $ln(p(\tilde\alpha | y, \beta, \theta)) - ln(p(\alpha^{(k-1)} | y, \beta, \theta))$ plutôt que le rapport $\frac{p(\tilde\alpha | y, \beta, \theta)}{p(\alpha^{(k-1)} | y, \beta, \theta)}$. Nous avons donc :
 $$
 ln(p(\alpha|y,\beta,\theta)) = (k-1)ln(\alpha)-\frac{\alpha}{s} + \sum_{i=1}^n(k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste}
 $$
@@ -362,7 +364,7 @@ $$
 \displaystyle \sigma =\sqrt{ln(\frac{\sigma_\beta}{\mu_\beta^2}+1)}
 \end{array}\right.
 $$
-
+Nous choisissons comme distribution instrumentale pour $\beta$ une loi normale centrée en la valeur précédente de $\beta$ dans la chaîne de Markov $\beta^{(k-1)}$ afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\beta$ et l'ancienne valeur $\beta^{(k-1)}$. Nous notons $\tau_{\beta}$ la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses. Comme pour $\alpha$, nous regarderons le logarithme des lois a posteriori conditionnelles pour faciliter les calculs numériques.
 
   2. Calcul pour une $\mathcal{U}(a,b)$.
 
@@ -373,7 +375,7 @@ $$
 \end{aligned}
 $$
 
-Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting. Pour faciliter le calcul numérique, nous regardons $log(p(\tilde\beta|y,\alpha,\theta))-log(p(\beta^{(k-1)}|y,\alpha,\theta))$ plutôt que le rapport $\frac{p(\tilde\beta|y,\alpha, \theta)}{p(\beta^{(k-1)}|y,\alpha,\theta)}$. Nous avons donc :
+Encore une fois, nous ne reconnaissons pas de forme de loi usuelle. Nous allons donc utiliser l'algorithme de Metropolis-Hasting. Nous choisissons comme distribution instrumentale pour $\beta$ une loi normale centrée en la valeur précédente de $\beta$ dans la chaîne de Markov $\beta^{(k-1)}$ afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\beta$ et l'ancienne valeur $\beta^{(k-1)}$. Nous notons $\tau_{\beta}$ la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses. Pour faciliter le calcul numérique, nous regardons $log(p(\tilde\beta|y,\alpha,\theta))-log(p(\beta^{(k-1)}|y,\alpha,\theta))$ plutôt que le rapport $\frac{p(\tilde\beta|y,\alpha, \theta)}{p(\beta^{(k-1)}|y,\alpha,\theta)}$. Nous avons donc :
 $$
 ln(p(\beta | y, \alpha, \theta)) =  \left\{\begin{array}{ll}
 \displaystyle \sum_{i=1}^n (k_i(\alpha,\beta)-1)ln(y_i) - k_i(\alpha,\beta)ln(\theta) - ln(\Gamma(k_i(\alpha,\beta))) \text{ + cste} &\text{si } \beta\in[a,b]. \\
@@ -388,12 +390,7 @@ a = \mu_\beta - \sqrt{3\sigma_\beta} &. \\
 b = \mu_\beta + \sqrt{3\sigma_\beta}
 \end{array}\right.
 $$
-
-
-### Remarque
-Dans l'algorithme de Metropolis-Hasting, nous choisissons comme distribution instrumentale pour $\alpha$ (resp. $\beta$) une loi normale centrée en la valeur précédente de $\alpha$ (resp. $\beta$) dans la chaîne $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$) afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ (resp. $\tilde\beta$) et l'ancienne valeur $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$). Nous notons $\tau_{\alpha}$ (resp. $\tau_{\beta}$) la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses.
 \
-
 
 ## *Fonctions implémentées*
 Afin de fluidifier notre analyse, nous avons implémenté un certain nombre de fonctions utiles à l'étude.
@@ -747,8 +744,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Dans ce contexte, la meilleure combinaison de lois en termes d'estimation GMH *des trois paramètres* semble donc être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En effet, lorsque $\alpha \sim \mathcal{G}$, l'algorithme tend à sous-évaluer $\beta$ et sur-évaluer $\alpha$. Visuellement, nous constatons aussi que GMH estime généralement des valeurs plus élevées de $X_t$ que celles du processus original, sauf dans le cas $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En associant ces deux arguments, nous pouvons donc conclure que la meilleure combinaison de lois est $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$.
-Suivant le choix des lois, GMH peut être meilleur ou moins bon que MLE : le choix de l'un ou l'autre dépend donc de la justesse des lois a priori choisies **(\@ref(fig:InfConc))**.
+Dans ce contexte, la meilleure combinaison de lois a priori en termes d'estimation par GMH *des trois paramètres* semble donc être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En effet, lorsque $\alpha \sim \mathcal{G}$, l'algorithme tend à sous-évaluer $\beta$ et sur-évaluer $\alpha$. L'algorithme MLE tend également à sur-estimer $\alpha$, plus que l'algorithme GMH pour $\alpha \sim \mathcal{L\textit{og-}N}$. Suivant le choix des lois et le paramètre considéré, GMH peut être meilleur ou moins bon que MLE : le choix de l'un ou l'autre dépend donc de la justesse des lois a priori choisies et de quel **(\@ref(fig:InfConc))**.
 
 
 ### $\beta = 1$, cas linéaire
@@ -819,7 +815,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Encore une fois, les meilleurs combinaisons de lois en termes d'estimation GMH *des trois paramètres* semble être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Nous constatons aussi que MLE sous-estime $\theta$. Ainsi, dans ce cas là, le meilleur choix d'estimations semble être le bayésien, avec une des deux combinaisons citées **(\@ref(fig:InfLin))**.
+Encore une fois, les meilleurs combinaisons de lois en termes d'estimation GMH *des trois paramètres* semble être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Nous constatons aussi que MLE sous-estime $\theta$ et sur estime légèrement $\alpha$. Ainsi, dans ce cas là, le meilleur choix d'estimations semble être le bayésien, avec une des deux combinaisons citées **(\@ref(fig:InfLin))**.
 
 
 ### $\beta$ >1, cas convexe
@@ -890,12 +886,13 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Visuellement, nous constatons que MLE semble être très bon pour approcher le processus, les deux courbes étant confondues. GMH semble plutôt le surestimer. Toutefois, en regardant de plus près les estimations de chaque paramètre, nous remarquons que seule l'estimation de $\beta$ par MLE est bonne. Ainsi, aucune des deux estimations ne semble bien  adaptée Le choix portera donc plutôt sur l'objectif final d'estimation, i.e. retrouver les vrais paramètres ou retrouver la forme du processus **(\@ref(fig:InfConv))**.
+Visuellement, nous constatons que MLE semble être très bon pour approcher le processus, les deux courbes étant confondues. GMH semble plutôt le surestimer lorsque $t > 75$. Toutefois, en regardant de plus près les estimations de chaque paramètre, nous remarquons que seule l'estimation de $\beta$ par MLE est bonne. L'algorithme MLE surestime largement $\theta$ et sous-estimie $\alpha$. Ainsi, aucune des deux estimations ne semble bien  adaptée. Le choix portera donc plutôt sur l'objectif final d'estimation, i.e. retrouver les vrais paramètres ou retrouver la forme du processus **(\@ref(fig:InfConv))**.
 \
 
 
 ## *Variations de $\alpha$*
 Nous regardons maintenant l'impact des variations de $\alpha$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\alpha$ agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\beta = 2$ et $\theta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
+\
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -924,6 +921,7 @@ theta0 <- mu_theta
 
 ### $\alpha = 1$
 Commençons par regarder le cas où $\alpha = 1$. Comme pour $\beta$ et $\theta$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\alpha$.
+\
 ```{r Alpha1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=1$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -990,11 +988,12 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Peu importe la combinaison de lois choisies, GMH est toujours mauvais pour estimer les paramètres, et il se trompe toujours de la même manière : il sur-estime $\theta$ et sous-estime $\alpha$. Cette erreur peut nous faire penser au rôle similaire que jouent ces deux paramètres sur la forme de la courbe, i.e. de coefficient de proportionnalité. À l'inverse, MLE donne une bonne estimation de chaque paramètre. Par contre, les deux courbes estimées reste toujours assez proches du vrai processus. Il semble donc préférable d'utiliser MLE ici **(\@ref(fig:Alpha1))**.
+Peu importe la combinaison de lois a priori choisies, GMH est toujours mauvais pour estimer les paramètres du processus, et il se trompe toujours de la même manière : il sur-estime $\theta$ et sous-estime $\alpha$. Cette erreur peut nous faire penser au rôle similaire que jouent ces deux paramètres sur la forme de la courbe et les valeurs du processus, i.e. de coefficient de proportionnalité. À l'inverse, MLE donne une bonne estimation de chaque paramètre. Cependant, nous constatons sur la figure que les deux courbes estimées reste toujours assez proches du vrai processus. Il semble donc préférable d'utiliser MLE ici **(\@ref(fig:Alpha1))**.
 
 
 ### $\alpha = 10$
 Nous regardons ensuite le cas $\alpha=10$, toujours avec les même conditions de départ pour les autres paramètres.
+\
 ```{r Alpha10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=10$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1061,11 +1060,12 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Encore une fois, GMH sous-estime toujours $\alpha$ et sur-estime $\theta$. MLE reste encore assez bon, bien que nous puissions constater une dégradation de ses estimations (elles sont moins proches des vraies valeurs que précédemment). Les deux courbes estimées reste encore une fois toujours assez proches du vrai processus **(\@ref(fig:Alpha10))**.
+Encore une fois, GMH sous-estime dans tous les cas $\alpha$ et sur-estime $\theta$. MLE reste encore assez performant, bien que nous puissions constater une dégradation de ses estimations (elles sont moins proches des vraies valeurs que précédemment). Les deux courbes estimées reste encore une fois toujours assez proches du vrai processus même si on observe un léger décalage pour GMH pour les 4 combinaisons **(\@ref(fig:Alpha10))**.
 
 
 ### $\alpha = 100$
 Nous regardons finalement $\alpha=100$, toujours avec les même conditions de départ pour les autres paramètres.
+\
 ```{r Alpha100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=100$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1132,7 +1132,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Les observations suivent la ligne de conduite observée précédemment : GMH reste mauvais pour estimer $\alpha \text{ et } \theta$ les estimations de MLE continue de se dégrader et les courbes estimées reste assez proches du vrai processus **(\@ref(fig:Alpha100))**.
+Les observations suivent la ligne de conduite observée précédemment : GMH reste mauvais pour estimer $\alpha \text{ et } \theta$ les estimations de MLE continue de se dégrader et les courbes estimées pour MLE reste assez proches du vrai processus tandis que celles de GMH se décalent encore d'avantage **(\@ref(fig:Alpha100))**.
 \
 
 
@@ -1235,6 +1235,7 @@ Nous constatons que GMH estime assez bien $\beta$ mais sur-estime $\theta$ et so
 
 ### $\theta = 10$
 Nous regardons maintenant l'impact pour $\theta = 10$, toujours avec les même conditions de départ pour les autres paramètres.
+\
 ```{r Theta10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=10$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1305,6 +1306,7 @@ Contrairement à ce que nous avions intuité, la qualité d'estimation de MLE ne
 
 ### $\theta = 100$
 Nous regardons finalement l'impact pour $\theta = 100$, toujours avec les même conditions de départ pour les autres paramètres.
+\
 ```{r Theta100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=100$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1370,12 +1372,13 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-nous obtenons toujours le même constat qu'avec $\theta = 10$. Par contre, pour faire le parallèle avec les variations de $\alpha$, les algorithmes d'estimations (MLE ou GMH) semble toujours vouloir augmenter $\theta$ lorsque l'un ou l'autre augmente **(\@ref(fig:Theta100))**.
+Nous obtenons toujours le même constat qu'avec $\theta = 10$. Par contre, pour faire le parallèle avec les variations de $\alpha$, les deux algorithmes d'estimations (MLE ou GMH) semblent toujours vouloir augmenter la valeur de $\theta$ lorsque l'un ou l'autre augmente **(\@ref(fig:Theta100))**.
 \
 
 
 ## *Variations des paramètres relatifs à l'expert*
 Nous nous intéressons maintenant à l'impact des paramètres d'expert sur la qualité d'estimation. Comme GMH semblait être le plus efficace avec $\beta = 1$, nous conservons cette valeur. De plus, nous refixons les paramètres dans le même cadre que celui utilisé lors des variations de $\beta$.
+\
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -1719,10 +1722,13 @@ Une faible confiance permet de corriger en partie les mauvaises valeurs de l'exp
 \
 
 # **Conclusion**
-Des variations sur au moins un des trois paramètres du processus ($\alpha,\ \beta \text{ et } \theta$) entraînent de nombreux changement dans les estimations via l'algorithme GMH. Ainsi, suivant les vraies valeurs choisies, la meilleure combinaison de lois a priori peut varier. Toutefois, la meilleure loi pour $\alpha$ reste toujours une log-normale, une loi gamma ayant montrée une baisse de la qualité d'estimation de manière quasiment systématique. En comparant aux estimations faites par maximum de vraisemblance, nous avons aussi constaté que l'estimation bayésienne n'était pas toujours la plus adapté suivant les cas. 
-Nous pouvons aussi remarquer que ces estimations (MLE et GMH) semblent mieux adaptées pour retrouver la forme du processus plutôt que la valeur de ces paramètres. \
+Nous avons constaté dans cette analyse que des variations sur au moins un des trois paramètres du processus ($\alpha,\ \beta \text{ et } \theta$) entraînent de nombreux changement dans les estimations via l'algorithme GMH. Ainsi, suivant les vraies valeurs choisies, la meilleure combinaison de lois a priori peut varier. Toutefois, la meilleure loi a priori pour $\alpha$ reste toujours une log-normale, le choix d'une loi a priori gamma ayant montrée une baisse de la qualité d'estimation de manière quasiment systématique. En comparant aux estimations faites par maximum de vraisemblance, nous avons aussi constaté que l'estimation bayésienne n'était pas toujours la plus adaptée suivant les cas pour un temps de calcul similaire.
+
+Nous pouvons également remarqué que ces estimations (MLE et GMH) semblent mieux adaptées pour retrouver la forme du processus plutôt que la valeur de ces paramètres.
+
 Comme attendu au niveau des paramètres relatif à l'expert, les estimations sont dégradées lorsque nous avons un mauvais expert, et le degré de confiance que nous lui accordons alors peut en partie corriger ses erreurs.
-Pour aller plus loin, nous pourrions diversifié encore plus les cas d'expert, en ayant par exemple un bonne expertise pour $\beta$ mais une mauvaise pour les deux autres paramètres.
+
+Pour aller plus loin, nous pourrions diversifier encore plus les cas d'expert, en ayant par exemple un bonne expertise pour $\beta$ mais une mauvaise pour les deux autres paramètres et regarder l'impact sur l'estimation faite par l'algorithme GMH.
 \
 \
 
