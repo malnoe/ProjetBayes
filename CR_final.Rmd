@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output:
   bookdown::pdf_document2:
     toc: true
-    toc_depth: 3
+    toc_depth: 2
     number_sections: true
 header-includes:
  \usepackage{float}
@@ -33,15 +33,16 @@ library(invgamma)
 
 
 # **Introduction**
-Nous souhaitons ici étudier un processus gamma X non homogène, et plus particulièrement l'inférence bayésienne de ses paramètres.
+Nous souhaitons ici étudier un processus gamma X non homogène, et plus particulièrement l'inférence bayésienne de ses paramètres. \
+Pour cela, nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous supposons aussi que, pour tous $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$, et nous avons alors, pour tout $x \in \mathbb{R}_+$ : 
+$$
+\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}.
+$$
 
-Pour cela, nous supposons que ce processus possède un *paramètre de forme* $a(t) = \alpha t^\beta$, avec $\alpha, \beta > 0$, et un *paramètre d'échelle* $\theta > 0$. Nous supposons aussi que, pour tous $t > s \geq 0$, $X(t) - X(s) \sim \mathcal{G}(a(t)-a(s), \theta)$ et nous avons alors, pour tout $x \in \mathbb{R}_+$, 
-
-$$\displaystyle f_{a(t)-a(s), \theta}(x) = \frac{x^{a(t)-a(s)-1}}{\theta^{a(t)-a(s)} \Gamma(a(t)-a(s))} e^{-\frac{x}{\theta}}.$$
-
-Par la construction d'une inférence bayésienne, nous allons donc chercher à estimer les trois paramètres introduits $\alpha,\ \beta \text{ et } \theta$.
-
-Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs de $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif sur l'évolution du processus, et ii) l'étude sur l'inférence bayésienne, en la comparant notamment à l'estimation par maximum de vraisemblance et en regardant l'impact des variations des différents paramètres du modèles ($\alpha$, $\beta$, $\theta$, la qualité de la prédiction de l'expert et de la confiance accordée à l'expert).
+Par la construction d'une inférence bayésienne, nous allons donc chercher à estimer les trois paramètres introduits $\alpha,\ \beta \text{ et } \theta$. \
+Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs de $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif sur l'évolution du processus, et ii) l'étude sur l'inférence bayésienne, en la comparant notamment à l'estimation par maximum de vraisemblance et en regardant l'impact des variations des différents paramètres du modèles ($\alpha$, $\beta$, $\theta$ et les paramètres relatifs à l'expert).
+\
+\
 
 # **Simulations du processus**
 Afin de tester l'effet de chaque paramètre sur l'évolution du processus, nous regardons individuellement l'impact de chacun d'eux. Pour cela, nous définissons 2 fonctions qui vont nous permettre de réaliser les simulations tout au long de cette analyse : 
@@ -70,7 +71,7 @@ simulations <- function(horizon = 100, dt_sim = 0.01, dt_insp = 5, alpha, beta, 
 }
 
 # Fonction graphique d'un processus
-plot_simulations <- function(simulations, subtitle = "") {
+plot_simulations <- function(simulations, title = "") {
   ggplot() +
     geom_line(
       aes(x = simulations$grille_sim, y = simulations$X_sim, col = "Simulées")
@@ -83,7 +84,7 @@ plot_simulations <- function(simulations, subtitle = "") {
       name = "Type de données",
       values = c("Simulées" = "#2d0569", "Inspectées" = "#e3573e"),
     ) +
-    labs(x = "t", y = expression(X[t]), subtitle = subtitle) +
+    labs(x = "t", y = expression(X[t]), title = title) +
     theme_light() +
     theme(
       axis.title = element_text(size = 10, face = "bold"),
@@ -98,6 +99,8 @@ plot_simulations <- function(simulations, subtitle = "") {
     )
 }
 ```
+\
+
 
 ## *Variations de $\alpha$*
 Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{0.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.\
@@ -119,25 +122,25 @@ sim1 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[1], beta = beta, theta = theta
 )
 plot_sim1 <- plot_simulations(
-  sim1, subtitle = bquote(alpha == .(list_alpha[1]))
+  sim1, title = bquote(alpha == .(list_alpha[1]))
 )
 sim2 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[2], beta = beta, theta = theta
 )
 plot_sim2 <- plot_simulations(
-  sim2, subtitle = bquote(alpha == .(list_alpha[2]))
+  sim2, title = bquote(alpha == .(list_alpha[2]))
 )
 sim3 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[3], beta = beta, theta = theta
 )
 plot_sim3 <- plot_simulations(
-  sim3, subtitle = bquote(alpha == .(list_alpha[3]))
+  sim3, title = bquote(alpha == .(list_alpha[3]))
 )
 sim4 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = list_alpha[4], beta = beta, theta = theta
 )
 plot_sim4 <- plot_simulations(
-  sim4, subtitle = bquote(alpha == .(list_alpha[4]))
+  sim4, title = bquote(alpha == .(list_alpha[4]))
 )
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
@@ -146,10 +149,11 @@ ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 200) à $\alpha$ : plus le paramètre est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
 \
 
+
 ## *Variations de $\beta$*
 Observons maintenant l'effet de $\beta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = 1$ et $\theta = 2$. Nous prenons ensuite $\beta \in \{0.5,\ 1,\ 2,\ 3\}$ afin d'observer son effet.\
 
-```{r SimBeta, cache=TRUE,fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\theta = 2$) pour différents $\\beta$", fig.pos="H"}
+```{r SimBeta,fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\theta = 2$) pour différents $\\beta$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -166,25 +170,25 @@ sim1 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[1], theta = theta
 )
 plot_sim1 <- plot_simulations(
-  sim1, subtitle = bquote(beta == .(list_beta[1]))
+  sim1, title = bquote(beta == .(list_beta[1]))
 )
 sim2 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[2], theta = theta
 )
 plot_sim2 <- plot_simulations(
-  sim2, subtitle = bquote(beta == .(list_beta[2]))
+  sim2, title = bquote(beta == .(list_beta[2]))
 )
 sim3 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[3], theta = theta
 )
 plot_sim3 <- plot_simulations(
-  sim3, subtitle = bquote(beta == .(list_beta[3]))
+  sim3, title = bquote(beta == .(list_beta[3]))
 )
 sim4 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = list_beta[4], theta = theta
 )
 plot_sim4 <- plot_simulations(
-  sim4, subtitle = bquote(beta == .(list_beta[4]))
+  sim4, title = bquote(beta == .(list_beta[4]))
 )
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
@@ -194,6 +198,8 @@ Comme attendu, l'effet de $\beta$ varie selon l'intervalle de valeurs dans leque
   - Pour un $\beta < 1$, la courbe est concave, i.e. la dégradation ralentit au cours du temps.
   - Pour $\beta = 1$, la courbe est linéaire, i.e. la dégradation évolue toujours de la même manière au cours du temps.
   - Pour un $\beta > 1$, la courbe est convexe, i.e. la dégradation s'accélère au cours du temps. Nous constatons d'ailleurs que, plus $\beta$ est grand, plus l'accélération de dégradation est forte (différence entre $\beta = 2$ et $\beta = 3$) **(\@ref(fig:SimBeta))**.
+\
+
 
 ## *Variations de $\theta$*
 Observons finalement l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.\
@@ -215,37 +221,40 @@ sim1 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[1]
 )
 plot_sim1 <- plot_simulations(
-  sim1, subtitle = bquote(theta == .(list_theta[1]))
+  sim1, title = bquote(theta == .(list_theta[1]))
 )
 sim2 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[2]
 )
 plot_sim2 <- plot_simulations(
-  sim2, subtitle = bquote(theta == .(list_theta[2]))
+  sim2, title = bquote(theta == .(list_theta[2]))
 )
 sim3 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[3]
 )
 plot_sim3 <- plot_simulations(
-  sim3, subtitle = bquote(theta == .(list_theta[3]))
+  sim3, title = bquote(theta == .(list_theta[3]))
 )
 sim4 <- simulations(
   dt_sim = dt_sim, dt_insp = dt_insp, alpha = alpha, beta = beta, theta = list_theta[4]
 )
 plot_sim4 <- plot_simulations(
-  sim4, subtitle = bquote(theta == .(list_theta[4]))
+  sim4, title = bquote(theta == .(list_theta[4]))
 )
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
 
 Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent encore une fois être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins forte que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 200 pour $\alpha$ **(\@ref(fig:SimTheta))**.
+\
+\
+
 
 # **Étude de l'inférence bayésienne**
 ## *Contexte*
-Nous supposons maintenant que nous disposons d'un échantillon d'inspection du niveau de dégradation $x = \{x_0,\ \dots ,\ x_n\}$, obtenu à différents temps d'inspection $t = \{t_0,\ \dots,\ t_n\}$ et issus d'un processus gamma non-homogène de paramètres $\alpha,\ \beta \text{ et } \theta$. Nous souhaitons étudier la qualité de l'inférence bayésienne multidimensionnelle pour l'estimation de ces trois paramètres lorsque l'on fait varier les valeurs des paramètres, la qualité de la prédiction de l'expert ainsi que la confiance accordée à l'expert.
+Nous supposons maintenant que nous disposons d'un échantillon d'inspection du niveau de dégradation $x = \{x_0,\ \dots ,\ x_n\}$, obtenu à différents temps d'inspection $t = \{t_0,\ \dots,\ t_n\}$ et issus d'un processus gamma non-homogène de paramètres $\alpha,\ \beta \text{ et } \theta$. Nous souhaitons étudier la qualité de l'inférence bayésienne multidimensionnelle pour l'estimation de ces trois paramètres lorsque nous faisons varier les valeurs des paramètres, la qualité de la prédiction de l'expert ainsi que la confiance accordée à l'expert.
 
-Puisque nous sommes dans un cas multidimensionnelle, nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting en testant différentes combinaisons de loi a priori pour les 3 paramètres. Les trois paramètres étant positifs, nous restreignons le choix des lois théoriques de chaque paramètre à un certain nombre de lois à support positif :
+Puisque nous sommes dans un cas multidimensionnelle, nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting, en testant différentes combinaisons de loi a priori pour les 3 paramètres. Les trois paramètres étant positifs, nous restreignons le choix des lois théoriques de chaque paramètre à un certain nombre de lois à support positif :
 
   - Pour $\alpha$, nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi gamma* $\mathcal{G}(k,s)$.
   - Pour $\beta$ nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi uniforme* $\mathcal{U}(a,b)$.
@@ -253,9 +262,9 @@ Puisque nous sommes dans un cas multidimensionnelle, nous allons donc passer par
 
 Nous supposons également que l'expert nous indique toujours une estimation $\mu_{exp}$ du paramètre à estimer (et non directement les paramètres de sa loi a priori) à laquelle nous associons une certaine confiance $\sigma_{exp}$. 
 
-Pour l'étude de l'impact des variations des paramètres  $\alpha,\ \beta \text{ et } \theta$ sur la qualité de l'inférence, nous choisissons $\mu_{exp}$ et $\sigma_{exp}$ en partant du principe que nous avons un bon expert à qui nous faisons confiance. Nous choisissons $\mu_{exp} = \mu + \frac{mu}{5}$ avec $\mu$ la véritable valeur du paramètre et $\sigma_{exp} = 0.2\times\mu_{exp}$.
+Pour l'étude de l'impact des variations des paramètres  $\alpha,\ \beta \text{ et } \theta$ sur la qualité de l'inférence, nous choisissons $\mu_{exp}$ et $\sigma_{exp}$ en partant du principe que nous avons un bon expert à qui nous faisons confiance. Nous choisissons donc $\mu_{exp} = \frac{6}{5} \mu$, avec $\mu$ la véritable valeur du paramètre, et $\sigma_{exp} = 0.2\times\mu_{exp}$.
 
-Pour l'étude de l'impact de la qualité de la prédiction de l'expert et de la confiance qui lui est accordée, nous choisissons $\mu_{exp} = 2\times\mu$ pour un mauvais expert et $\mu_{exp} = \mu + \frac{mu}{5}$ pour un bon expert et nous choisissons $\sigma_{exp} = 0.2\times\mu_{exp}$ pour une confiance élevée et $\sigma_{exp} = 0.8\times\mu_{exp}$ pour une faible confiance.
+Pour l'étude de l'impact des paramètres relatifs à l'expert, nous choisissons $\mu_{exp} \in \{\frac{6}{5}\mu,\ 2\mu \}$ pour un expert bon ou mauvais respectivement et $\sigma_{exp} \in \{0.2\mu_{exp},\ 0.8\mu_{exp} \}$ pour une confiance élevée ou faible respectivement.
 
 Afin de juger de la pertinence de l'approche bayésienne, nous allons comparer ses estimations à celles obtenues par l'approche du maximum de vraisemblance. Nous calculons donc la vraisemblance du modèle.
 
@@ -277,6 +286,7 @@ $$
 
 Afin de réaliser l'inférence bayésienne, nous calculons maintenant les différentes lois a posteriori obtenues à partir des différentes lois a priori que nous allons tester dans notre analyse.
 
+
 ### Calcul de la loi a posteriori pour $\theta$
 Nous avons choisi comme loi a priori pour $\theta$ une $\mathcal{I\textit{nv-}G}(a,b)$. Ainsi :
 
@@ -296,7 +306,6 @@ a = \frac{\mu_{\theta}^2}{\sigma_{\theta}}+2 &. \\
 b = (a-1)\mu_{\theta}
 \end{array}\right.
 $$
-\
 
 
 ### Calcul des lois a posteriori pour $\alpha$
@@ -341,7 +350,6 @@ $$
 \displaystyle s = \frac{\sigma_\alpha}{\mu_\alpha}
 \end{array}\right.
 $$
-\
 
 
 ### Calcul des lois a posteriori pour $\beta$
@@ -380,19 +388,19 @@ a = \mu_\beta - \sqrt{3\sigma_\beta} &. \\
 b = \mu_\beta + \sqrt{3\sigma_\beta}
 \end{array}\right.
 $$
-\
 
 
 ### Remarque
 Dans l'algorithme de Metropolis-Hasting, nous choisissons comme distribution instrumentale pour $\alpha$ (resp. $\beta$) une loi normale centrée en la valeur précédente de $\alpha$ (resp. $\beta$) dans la chaîne $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$) afin de nous ramener à un rapport des lois a posteriori entre la nouvelle valeur $\tilde\alpha$ (resp. $\tilde\beta$) et l'ancienne valeur $\alpha^{(k-1)}$ (resp. $\beta^{(k-1)}$). Nous notons $\tau_{\alpha}$ (resp. $\tau_{\beta}$) la variance de la normale et nous avons choisi de fixer sa valeur à $0.3$ pour l'ensemble de nos analyses.
 \
 
-## *Fonctions*
+
+## *Fonctions implémentées*
 Afin de fluidifier notre analyse, nous avons implémenté un certain nombre de fonctions utiles à l'étude.
+
 
 ### Lois a posteriori
 Nous avons implémenté une fonction pour chacune des lois a posteriori conditionnelles de $\alpha \text{ et } \beta$ calculées précédemment. Nous avons aussi implémenté une fonction pour calculer les $k_i(\alpha, \beta)$ introduits précédemment.
-\
 ```{r}
 # Fonction de calcul des k_i
 func_list_ki <- function(alpha, beta, t_insp) {
@@ -440,6 +448,7 @@ logpost_beta_unif <- function(beta, y, t_insp, alpha, theta, mu_beta, sigma_beta
 }
 ```
 
+
 ### Algorithme de Gibbs-Metropolis-Hastings (GMH)
 La fonction `algo_GMH` implémente un algorithme MCMC de type Gibbs–Metropolis–Hastings (GMH) permettant d'obtenir K estimations bayésiennes de chaque paramètre ($\alpha,\ \beta \text{ et } \theta$). Elle prend en entrée les arguments suivants :
 
@@ -452,7 +461,7 @@ La fonction `algo_GMH` implémente un algorithme MCMC de type Gibbs–Metropolis
   - `t_insp` les $t_1,\ \dots,\ t_n$ temps d'inspection.
   - `K` le nombre d'itérations des algorithmes.
   - `burnin` le nombre d'itérations à supprimer du début de la liste des résultats, le "temps de chauffe" de l'algorithme.
-\
+
 ```{r}
 algo_GMH <- function(
     logpost_alpha, mu_alpha, sigma_alpha, tau_alpha, alpha0, 
@@ -520,9 +529,9 @@ algo_GMH <- function(
 }
 ```
 
+
 ### Estimateurs du maximum de vraisemblance (MLE) par optimisation
 Afin d'obtenir les MLE, nous cherchons à minimiser $-ln(Vraisemblance)$. Nous implémentons donc d'abord une fonction permettant de retourner cet objet (`neg_vraisemblance`), puis nous implémentons une fonction permettant d'exhiber les MLE obtenus (`mle`).
-\
 ```{r}
 # -ln(Vraisemblance)
 neg_vraisemblance <- function(vect_param, y, t_insp) {
@@ -560,11 +569,11 @@ mle <- function(alpha0, beta0, theta0, data, t_insp) {
 }
 ```
 
+
 ### Fonction de visualisation
 Nous implémentons finalement une fonction nous permettant de visualiser les résultats obtenus simultanément (`vis_res`). Elle nous permettra notamment de comparer les vraies données aux estimations bayésiennes et par maximum de vraisemblance.
-\
 ```{r}
-vis_res <- function(res_GMH, res_MLE, sim_og, subtitle = "") {
+vis_res <- function(res_GMH, res_MLE, sim_og, title = "") {
   # Récupération des hyperparamètres de la simulation originale en jeu
   horizon <- sim_og$grille_sim[length(sim_og$grille_sim)]
   dt_sim <- sim_og$grille_sim[2] - sim_og$grille_sim[1]
@@ -591,14 +600,16 @@ vis_res <- function(res_GMH, res_MLE, sim_og, subtitle = "") {
     X_sim_MLE = simulations_MLE$X_sim
   )
   # Sous-titre
-  subt <- paste0(
-    "MLE : alpha=", round(alpha_MLE, 3), ", ",
-    "beta=", round(beta_MLE, 3), ", ",
-    "theta=", round(theta_MLE, 3), "\n",
-    "GMH : alpha=", round(alpha_GMH, 3), ", ",
-    "beta=", round(beta_GMH, 3), ", ",
-    "theta=", round(theta_GMH, 3)
-    )
+  subt <- bquote(
+  atop(
+    MLE : alpha == .(round(alpha_MLE, 3)) * "," ~
+          beta  == .(round(beta_MLE, 3))  * "," ~
+          theta == .(round(theta_MLE, 3)),
+    GMH : alpha == .(round(alpha_GMH, 3)) * "," ~
+          beta  == .(round(beta_GMH, 3))  * "," ~
+          theta == .(round(theta_GMH, 3))
+  )
+)
   # Visualisation des résultats sur une même figure
   ggplot() +
     geom_line(aes(
@@ -621,7 +632,7 @@ vis_res <- function(res_GMH, res_MLE, sim_og, subtitle = "") {
         "MLE" = "#2d0569" 
       ),
     ) +
-    labs(x = "t", y = expression(X[t]), title = subtitle, subtitle = subt) +
+    labs(x = "t", y = expression(X[t]), title = title, subtitle = subt) +
     theme_light() +
     theme(
       axis.title = element_text(size = 10, face = "bold"),
@@ -637,12 +648,12 @@ vis_res <- function(res_GMH, res_MLE, sim_og, subtitle = "") {
     )
 }
 ```
+\
+
 
 ## *Variations de $\beta$*
-**A REPRENDRE.**
-D'après nos constats précédents (partie **Simulations du processus**), l'influence de $\alpha$ et $\theta$ est assez faible sur la courbe du processus ; ils n'agissent que sur un coefficient de proportionnalité, et non sur la forme générale. À l'inverse, $\beta$ module la forme de la courbe selon trois cas : $\beta < 1$, $\beta = 1$ et $\beta > 1$. Nous allons donc distinguer ces trois cas afin d'analyser et comparer les estimations bayésiennes et par maximum de vraisemblance. Afin de garder une cohérence entre les résultats, nous fixons l'ensemble des autres paramètres de simulations à une valeur fixe :
-\
-```{r,cache=TRUE}
+D'après nos constats précédents (partie **Simulations du processus**), $\beta$ module la forme de la courbe selon trois cas : $\beta < 1$, $\beta = 1$ et $\beta > 1$. Nous allons donc distinguer ces trois cas afin d'analyser et comparer les estimations bayésiennes et par maximum de vraisemblance. Afin de garder une cohérence entre les résultats, nous fixons l'ensemble des autres paramètres de simulations à une valeur fixe :
+```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
 dt_insp <- 5
@@ -653,27 +664,24 @@ K <- 10000
 burnin <- 1000
 ```
 
-Nous fixons aussi les données relatives à l'expert pour $\alpha$ et $\theta$ : nous considérons le cas où il est bon et où nous lui faisons confiance :
-\
-```{r,cache=TRUE}
+Nous fixons aussi les données relatives à l'expert pour $\alpha$ et $\theta$. Nous considérons le cas où il est bon et où nous lui faisons confiance :
+```{r}
 # Bonne confiance en un expert bon
 ### Expertise sur alpha
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- mu_alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
 ### Expertise sur theta
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- mu_theta*0.2
 theta0 <- mu_theta
 ```
-\
 
 
 ### $\beta < 1$, cas concave
 Commençons par regarder le cas où $\beta < 1$, par exemple $\beta = 0.5$. Comme pour $\alpha$ et $\theta$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\beta$.
-\
-```{r InfConc, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta < 1$ avec $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
+```{r InfConc, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta=0.5$, $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -685,10 +693,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur beta : bonne confiance en un expert bon
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -696,10 +706,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -708,48 +717,43 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
-# 3. alpha ~ Log-normale et beta ~ Uniforme
+# 4. alpha ~ Log-normale et beta ~ Uniforme
 res_GMH <- algo_GMH(
   logpost_alpha_lognormale, mu_alpha, sigma_alpha, tau_alpha, alpha0,
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
-# 4. alpha ~ Gamma et beta ~ Uniforme
+# 5. alpha ~ Gamma et beta ~ Uniforme
 res_GMH <- algo_GMH(
   logpost_alpha_gamma, mu_alpha, sigma_alpha, tau_alpha, alpha0,
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:InfConc))**
-Quand $\alpha \sim Gamma$ GMH  surévalue alpha >3 mais bonne évaluation quand $\alpha \sim LogN$. Cependant à l'inverse, quand $\alpha \sim Gamma$ GMH évalue mieux beta et theta, valeur + proche de 0.3 pour $\beta$ et plus proche de 2 pour $\theta$ que quand $\alpha \sim LogN$. Il y a donc un compromis à faire.
-Du coup, MLE est ni meilleur ni moins bon : si on prend gamma et uniforme, GMH est meilleur que MLE pour estimation de beta et theta mais MLE est meilleur pour theta. Si on prend Logn et uniforme alors MLE est meilleur pour beta et theta.
+Dans ce contexte, la meilleure combinaison de lois en termes d'estimation GMH *des trois paramètres* semble donc être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En effet, lorsque $\alpha \sim \mathcal{G}$, l'algorithme tend à sous-évaluer $\beta$ et sur-évaluer $\alpha$. Visuellement, nous constatons aussi que GMH estime généralement des valeurs plus élevées de $X_t$ que celles du processus original, sauf dans le cas $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En associant ces deux arguments, nous pouvons donc conclure que la meilleure combinaison de lois est $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$.
+Suivant le choix des lois, GMH peut être meilleur ou moins bon que MLE : le choix de l'un ou l'autre dépend donc de la justesse des lois a priori choisies **(\@ref(fig:InfConc))**.
 
 
-### $\beta$ =1, cas linéaire
+### $\beta = 1$, cas linéaire
 Regardons maintenant le cas où $\beta = 1$. Comme précédemment, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\beta$ et reprenons les mêmes valeurs de $\alpha$ et $\theta$.
-\
-```{r InfLin, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta = 1$ avec $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
+```{r InfLin, cache=TRUE, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta = 1$, $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -761,10 +765,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur beta : bonne confiance en un expert bon
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -772,10 +778,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -784,10 +789,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -796,10 +800,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -808,24 +811,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-MLE sous-estime theta 1.6 au lieu de 2 et GMH surestime theta 2.6 ou 2.7 au lieu de 2.
- Pour alpha ~ gamma sur estimation de alpha à 2 et légère sous estimation de beta à 0.86. Meilleur estimation de beta avec GMH pour logn et uniforme ou logn et logn où il est vraiment bon et meilleur que MLE.
-**(\@ref(fig:InfLin))**
+Encore une fois, les meilleurs combinaisons de lois en termes d'estimation GMH *des trois paramètres* semble être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Nous constatons aussi que MLE sous-estime $\theta$. Ainsi, dans ce cas là, le meilleur choix d'estimations semble être le bayésien, avec une des deux combinaisons citées **(\@ref(fig:InfLin))**.
 
 
 ### $\beta$ >1, cas convexe
 Regardons finalement le cas où $\beta > 1$, par exemple $\beta = 3$. Comme précédemment, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\beta$ et reprenons les mêmes valeurs de $\alpha$ et $\theta$.
-\
-```{r InfConv,cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta > 1$ avec $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
+```{r InfConv, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\beta = 3$, $\\alpha=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -837,10 +836,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur beta : bonne confiance en un expert bon
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -848,10 +849,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -860,10 +860,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -872,10 +871,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -884,27 +882,21 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Commentaire :
-MLE estime très bien beta 2.994 pour beta=3 mais par contre se plante complètement dans l'estimation de alpha et theta : sous-estime largement alpha et surestime theta. L'algo a sans doute du mal à faire la diff entre les deux puisque les deux n'influent pas sur la forme mais juste coef de multiplicatif.
-GMH fait une estimation plus proche de la réalité mais avec quand même des coefs un peu éloignés 0.5-0.6 pour alpha contre 1, 3.4 pour beta au lieu de 1 et 0.7-0.75 pour theta au lieu de 1.
-Du coup : la forme de GMH est un peu à côté de la plaque, éloigné de la forme des vrais données alors que même si MLE estime mal alpha et theta, les deux courbes se croisent.
+Visuellement, nous constatons que MLE semble être très bon pour approcher le processus, les deux courbes étant confondues. GMH semble plutôt le surestimer. Toutefois, en regardant de plus près les estimations de chaque paramètre, nous remarquons que seule l'estimation de $\beta$ par MLE est bonne. Ainsi, aucune des deux estimations ne semble bien  adaptée Le choix portera donc plutôt sur l'objectif final d'estimation, i.e. retrouver les vrais paramètres ou retrouver la forme du processus **(\@ref(fig:InfConv))**.
+\
 
-**(\@ref(fig:InfConv))**
 
 ## *Variations de $\alpha$*
-
-Nous regardons maintenant l'impact des variations de $\alpha$ sur la qualité de l'inférence bayésienne. Nous fixons $\beta = 2$ et $\theta = 2$ et gardons les mêmes paramètres que précèdemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
-\
-```{r,cache=TRUE}
+Nous regardons maintenant l'impact des variations de $\alpha$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\alpha$ agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\beta = 2$ et $\theta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
+```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
 dt_insp <- 5
@@ -915,26 +907,24 @@ K <- 10000
 burnin <- 1000
 ```
 
-Nous fixons aussi les données relatives à l'expert pour $\beta$ et $\theta$ : nous considérons le cas où il est bon et où nous lui faisons confiance :
-\
-```{r,cache=TRUE}
+Nous fixons aussi les données relatives à l'expert pour $\beta$ et $\theta$. Nous considérons le cas où il est bon et où nous lui faisons confiance :
+```{r}
 # Bonne confiance en un expert bon
 ### Expertise sur beta
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- mu_beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
 ### Expertise sur theta
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- mu_theta*0.2
 theta0 <- mu_theta
 ```
-\
 
-### $\alpha$ = 1
+
+### $\alpha = 1$
 Commençons par regarder le cas où $\alpha = 1$. Comme pour $\beta$ et $\theta$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\alpha$.
-\
-```{r Alpha1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=1$ avec $\\beta=2$ et $\\theta=2$", fig.pos="H"}
+```{r Alpha1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=1$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -946,10 +936,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur beta : bonne confiance en un expert bon
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -957,10 +949,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -969,10 +960,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -981,10 +971,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -993,23 +982,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Alpha1))**
-MLE marche très bien ici : bonne estimation des 3 paramètres.
-GMH est mauvais pour les 4 combinaisons de lois avec le même phénomèneme : alpha est sous estimé (0.3-0.5 au lieu de 1) et theta est surestimé (2.5-3.4 au lieu de 2). Par contre estimation de beta pas trop mauvaise dans tous les cas.
+Peu importe la combinaison de lois choisies, GMH est toujours mauvais pour estimer les paramètres, et il se trompe toujours de la même manière : il sur-estime $\theta$ et sous-estime $\alpha$. Cette erreur peut nous faire penser au rôle similaire que jouent ces deux paramètres sur la forme de la courbe, i.e. de coefficient de proportionnalité. À l'inverse, MLE donne une bonne estimation de chaque paramètre. Par contre, les deux courbes estimées reste toujours assez proches du vrai processus. Il semble donc préférable d'utiliser MLE ici **(\@ref(fig:Alpha1))**.
 
-### $\alpha$ = 10
-Nous regardons ensuite le cas $\alpha=10$.
-\
-```{r Alpha10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=10$ avec $\\beta=2$ et $\\theta=2$", fig.pos="H"}
+
+### $\alpha = 10$
+Nous regardons ensuite le cas $\alpha=10$, toujours avec les même conditions de départ pour les autres paramètres.
+```{r Alpha10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=10$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1021,10 +1007,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur alpha : bonne confiance en un expert bon
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1032,10 +1020,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -1044,10 +1031,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1056,10 +1042,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1068,23 +1053,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Alpha10))**
-MLE fait bien son travail, plutôt bonne évaluation de alpha, beta et theta même si pas parfait.
-GMH dans les choux : sous évaluation CLAIRE de alpha 1.5 contre 10 et surestimation de theta 5-6 au lieu de 2. De nouveau sans doute lié au fait que alpha et theta aient un peu la même "fonction" sur la courbe et les valeurs : l'algo GMH arrive pas trop a capter ça quand alpha devient grande.
+Encore une fois, GMH sous-estime toujours $\alpha$ et sur-estime $\theta$. MLE reste encore assez bon, bien que nous puissions constater une dégradation de ses estimations (elles sont moins proches des vraies valeurs que précédemment). Les deux courbes estimées reste encore une fois toujours assez proches du vrai processus **(\@ref(fig:Alpha10))**.
 
-### $\alpha$ = 100
-Nous regarons $\alpha=100$.
-\
-```{r Alpha100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=100$ avec $\\beta=2$ et $\\theta=2$", fig.pos="H"}
+
+### $\alpha = 100$
+Nous regardons finalement $\alpha=100$, toujours avec les même conditions de départ pour les autres paramètres.
+```{r Alpha100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=100$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1096,10 +1078,12 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur alpha : bonne confiance en un expert bon
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1107,10 +1091,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -1119,10 +1102,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1131,10 +1113,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1143,23 +1124,21 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Alpha100))**
-Même phénomène que pour alpha = 10, si ce n'est plus accentué. GMH sur évalue theta et sous évalue alpha mais évalue plutôt bien beta. MLE est plus performant : niveau forme générale mais aussi au niveau des coefficients même si alpha à "seulement" 73 au lieu de 100.
+Les observations suivent la ligne de conduite observée précédemment : GMH reste mauvais pour estimer $\alpha \text{ et } \theta$ les estimations de MLE continue de se dégrader et les courbes estimées reste assez proches du vrai processus **(\@ref(fig:Alpha100))**.
+\
 
 
 ## *Variations de $\theta$*
-Nous regardons maintenant l'impact des variations de $\theta$ sur la qualité de l'inférence bayésienne. Nous fixons $\alpha = 1$ et $\beta = 2$ et gardons les mêmes paramètres que précèdemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
-\
-```{r,cache=TRUE}
+Nous regardons maintenant l'impact des variations de $\theta$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\theta$, comme $\alpha$, agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\alpha = 1$ et $\beta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
+```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
 dt_insp <- 5
@@ -1170,26 +1149,24 @@ K <- 10000
 burnin <- 1000
 ```
 
-Nous fixons aussi les données relatives à l'expert pour $\beta$ et $\theta$ : nous considérons le cas où il est bon et où nous lui faisons confiance :
-\
-```{r,cache=TRUE}
+Nous fixons aussi les données relatives à l'expert pour $\beta$ et $\theta$. Nous considérons le cas où il est bon et où nous lui faisons confiance :
+```{r}
 # Bonne confiance en un expert bon
 ### Expertise sur beta
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- mu_beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
 ### Expertise sur alpha
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- mu_alpha*0.2
 alpha0 <- mu_alpha
 ```
-\
 
-### $\theta$ = 1
-Commençons par regarder le cas où $\alpha = 1$. Comme pour $\beta$ et $\theta$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\alpha$.
-\
-```{r Theta1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=1$ avec $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
+
+### $\theta = 1$
+Commençons par regarder le cas où $\alpha = 1$. Comme pour $\beta$ et $\alpha$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\alpha$.
+```{r Theta1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=1$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1201,8 +1178,10 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur theta : bonne confiance en un expert bon
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 theta0 <- mu_theta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1210,10 +1189,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -1222,10 +1200,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1234,10 +1211,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1246,22 +1222,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Theta1))**
-GMH : sous évaluation de alpha, bonne estim de beta et ok pour theta (logn logn pas bon du tout pour alpha et theta). MLE Très bon pour les 3 paramètres.
+Nous constatons que GMH estime assez bien $\beta$ mais sur-estime $\theta$ et sous-estime $\alpha$. À l'inverse, MLE estime bien les trois paramètres. Les courbes estimées restent par contre toujours assez proches du vrai processus. Comme pour les analyses sur les variations de $\alpha$, nous pouvons supposer que ces mauvaises estimations sont entraînées par le rôle similaire de $\alpha$ et $\theta$ sur $X_t$. Nous pouvons aussi supposer que, lorsque nous allons augmenter $\theta$, GMH sera toujours mauvais et la qualité de MLE va se dégrader **(\@ref(fig:Theta1))**.
 
-### $\theta$ = 10
-Nous regardons maintenant l'impact pour $\theta = 10$.
-\
-```{r Theta10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=10$ avec $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
+
+### $\theta = 10$
+Nous regardons maintenant l'impact pour $\theta = 10$, toujours avec les même conditions de départ pour les autres paramètres.
+```{r Theta10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=10$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1273,9 +1247,11 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur theta : bonne confiance en un expert bon
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- theta*0.2
 theta0 <- mu_theta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1283,10 +1259,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -1295,10 +1270,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1307,10 +1281,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1319,23 +1292,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Theta10))**
-Un peu comme avec les augmentations d'alpha, GMH surestime un peu theta et sous-estime alpha mais les courbes collent bien, l'algo peine à faire la diff entre les deux. MLE est meilleur.
+Contrairement à ce que nous avions intuité, la qualité d'estimation de MLE ne semble pas s'être dégradée ici. Par contre, GMH reste toujours mauvais pour estimer $\alpha \text{ et } \theta$. Encore une fois, les courbes d'estimations restent toujours proches du vrai processus **(\@ref(fig:Theta10))**.
 
 
-### $\theta$ = 100
-Nous regardons maintenant l'impact pour $\theta = 100$.
-\
-```{r Theta100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=100$ avec $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
+### $\theta = 100$
+Nous regardons finalement l'impact pour $\theta = 100$, toujours avec les même conditions de départ pour les autres paramètres.
+```{r Theta100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=100$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1347,9 +1317,11 @@ sim_og <- simulations(
 data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 ### Expertise sur theta : bonne confiance en un expert bon
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- theta*0.2
 theta0 <- mu_theta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 2. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1357,10 +1329,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Gamma et beta ~ Lognormale
@@ -1369,10 +1340,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1381,10 +1351,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1393,21 +1362,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:Theta100))**
-Pareil, en fait l'algo augmente systématiquement theta lorsque alpha ou theta augmente mais jamais alpha. Pas d'impact du choix des prior. MLE marche très bien.
+nous obtenons toujours le même constat qu'avec $\theta = 10$. Par contre, pour faire le parallèle avec les variations de $\alpha$, les algorithmes d'estimations (MLE ou GMH) semble toujours vouloir augmenter $\theta$ lorsque l'un ou l'autre augmente **(\@ref(fig:Theta100))**.
+\
 
-## *Variations de la qualité de la prédiction de l'expert et de la confiance accordée*
-On prend beta=1 parce que c'est là que ça marchait pas trop mal pour GMH.
 
+## *Variations des paramètres relatifs à l'expert*
+Nous nous intéressons maintenant à l'impact des paramètres d'expert sur la qualité d'estimation. Comme GMH semblait être le plus efficace avec $\beta = 1$, nous conservons cette valeur. De plus, nous refixons les paramètres dans le même cadre que celui utilisé lors des variations de $\beta$.
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -1422,7 +1390,7 @@ burnin <- 1000
 
 
 ### Expert bon et confiance élevée
-```{r BonEleve2, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque l'expert fait une bonne estimation et une grande confiance lui est accordée pour $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
+```{r BonEleve2, cache=TRUE, fig.align="center", fig.cap="Résultats pour un bon expert à qui nous faisons confiance, avec $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1434,19 +1402,21 @@ data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 
 ### Expertise sur les params : bonne confiance en un expert bon
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- theta*0.2
 theta0 <- mu_theta
 
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
 
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- mu_beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 1. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1454,10 +1424,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 2. alpha ~ Gamma et beta ~ Lognormale
@@ -1466,10 +1435,9 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1478,10 +1446,9 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1490,20 +1457,19 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:BonEleve2))**
-GMH bon pour logn unif et logn logn (meilleur que MLE) mais surestime alpha quand alphe ~ gamma.
+Nous avions déjà observé ce cas, les performances de GMH sont assez bonnes lorsque $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$ ou $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Par contre, lorsque $\alpha \sim \mathcal{G}$, GMH tend à sur-estimer $\alpha$ **(\@ref(fig:BonEleve2))**.
+
 
 ### Expert mauvais et confiance élevée
-```{r MauvaisEleve2, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque l'expert fait une mauvaise estimation et une grande confiance lui est accordée pour $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
+```{r MauvaisEleve2, cache=TRUE, fig.align="center", fig.cap="Résultats pour un mauvais expert à qui nous faisons confiance, avec $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1515,11 +1481,11 @@ data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 
 ### Expertise sur les params : bonne confiance en un expert mauvais
-mu_theta <- theta + theta
+mu_theta <- 2*theta
 sigma_theta <- theta*0.2
 theta0 <- mu_theta
 
-mu_alpha <- alpha + alpha
+mu_alpha <- 2*alpha
 sigma_alpha <- alpha*0.2
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
@@ -1528,6 +1494,8 @@ mu_beta <- beta + beta
 sigma_beta <- mu_beta*0.2
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 1. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1535,10 +1503,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 2. alpha ~ Gamma et beta ~ Lognormale
@@ -1547,10 +1515,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1559,10 +1527,10 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1571,21 +1539,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:MauvaisEleve2))**
-Malgré la confiance élevée ça va, alpha reste proche de 1, beta aussi proche de 1 mais theta + affecté 3 au lieu de 2 pour 3 combinaisons sur 4. Le mieux c'est gamma et uniforme mais en vrai le mieux c'est MLE.
+Bien qu'assez faible, nous observons une dégradation de des estimations de GMH, notamment pour $\theta$ et $\alpha$. Les valeurs initiales données par l'expert peuvent donc entraîner de grandes variations par rapport aux vraies valeurs **(@ref(fig:MauvaisEleve2))**.
 
 
 ### Expert bon et faible confiance
-```{r BonFaible2, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque l'expert fait une bonne estimation et une faible confiance lui est accordée pour $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
+```{r BonFaible2, cache=TRUE, fig.align="center", fig.cap="Résultats pour un bon expert à qui nous ne faisons pas confiance, avec $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1597,19 +1564,21 @@ data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 
 ### Expertise sur les params : bonne confiance en un expert bon
-mu_theta <- theta + theta/5
+mu_theta <- 6*theta/5
 sigma_theta <- theta*0.8
 theta0 <- mu_theta
 
-mu_alpha <- alpha + alpha/5
+mu_alpha <- 6*alpha/5
 sigma_alpha <- alpha*0.8
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
 
-mu_beta <- beta + beta/5
+mu_beta <- 6*beta/5
 sigma_beta <- mu_beta*0.8
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 1. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1617,10 +1586,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 2. alpha ~ Gamma et beta ~ Lognormale
@@ -1629,10 +1598,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1641,10 +1610,10 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1653,22 +1622,20 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:BonFaible2))**
-Même avec faible confiance GMH est performant, meilleur que MLE en choisissant logn et uniforme.
+Bien que nous n'accordions pas une grande confiance à l'expert, le fait qu'il soit bon permet quand-même d'obtenir de bonnes estimations des paramètres via GMH. L'impact de la confiance accordée semble donc moins important que la qualité de l'expert **(\@ref(fig:BonFaible2))**.
 
 
 ### Expert mauvais et faible confiance
-
-```{r MauvaisFaible2, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque l'expert fait une mauvaise estimation et une faible confiance lui est accordée pour $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
+```{r MauvaisFaible2, cache=TRUE, fig.align="center", fig.cap="Résultats pour un mauvais expert à qui nous faisons confiance, avec $\\alpha=1$, $\\beta=1$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
 
@@ -1680,19 +1647,21 @@ data <- sim_og$X_insp
 t_insp <- sim_og$grille_insp
 
 ### Expertise sur les params : bonne confiance en un expert bon
-mu_theta <- theta + theta
+mu_theta <- 2*theta
 sigma_theta <- theta*0.8
 theta0 <- mu_theta
 
-mu_alpha <- alpha + alpha
+mu_alpha <- 2*alpha
 sigma_alpha <- alpha*0.8
 tau_alpha <- 0.3
 alpha0 <- mu_alpha
 
-mu_beta <- beta + beta
+mu_beta <- 2*beta
 sigma_beta <- mu_beta*0.8
 tau_beta <- 0.3
 beta0 <- mu_beta
+### Estimations par maximum de vraisemblance
+res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
 
 # 1. alpha ~ Log-normale et beta ~ Log-normale
 res_GMH <- algo_GMH(
@@ -1700,10 +1669,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot1 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 2. alpha ~ Gamma et beta ~ Lognormale
@@ -1712,10 +1681,10 @@ res_GMH <- algo_GMH(
   logpost_beta_lognormale, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot2 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Log-N")
 )
 
 # 3. alpha ~ Log-normale et beta ~ Uniforme
@@ -1724,10 +1693,10 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot3 <- vis_res(
   res_GMH, res_MLE, sim_og,
-  subtitle = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Log-N" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # 4. alpha ~ Gamma et beta ~ Uniforme
@@ -1736,29 +1705,27 @@ res_GMH <- algo_GMH(
   logpost_beta_unif, mu_beta, sigma_beta, tau_beta, beta0,
   mu_theta, sigma_theta, theta0, data, t_insp, K, burnin
 )
-res_MLE <- mle(alpha0, beta0, theta0, data, t_insp)
+
 plot4 <- vis_res(
   res_GMH, res_MLE, sim_og, 
-  subtitle = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
+  title = expression(alpha %~% "Gamma" ~ "et" ~ beta %~% "Uniforme")
 )
 
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-**(\@ref(fig:MauvaisFaible2))**
-La confiance plus faible permet d'avoir des meilleurs résultats que quand on donnait une confiance élevée au mauvais expert mais ça reste moins bon que MLE.
+Une faible confiance permet de corriger en partie les mauvaises valeurs de l'expert, notamment quand nous comparons les résultats au cas où nous lui accordons une grande confiance. Toutefois, cela ne suffit pas pour corriger entièrement les écarts aux vraies valeurs **(\@ref(fig:MauvaisFaible2))**.
+\
+\
 
 # **Conclusion**
+Des variations sur au moins un des trois paramètres du processus ($\alpha,\ \beta \text{ et } \theta$) entraînent de nombreux changement dans les estimations via l'algorithme GMH. Ainsi, suivant les vraies valeurs choisies, la meilleure combinaison de lois a priori peut varier. Toutefois, la meilleure loi pour $\alpha$ reste toujours une log-normale, une loi gamma ayant montrée une baisse de la qualité d'estimation de manière quasiment systématique. En comparant aux estimations faites par maximum de vraisemblance, nous avons aussi constaté que l'estimation bayésienne n'était pas toujours la plus adapté suivant les cas. 
+Nous pouvons aussi remarquer que ces estimations (MLE et GMH) semblent mieux adaptées pour retrouver la forme du processus plutôt que la valeur de ces paramètres. \
+Comme attendu au niveau des paramètres relatif à l'expert, les estimations sont dégradées lorsque nous avons un mauvais expert, et le degré de confiance que nous lui accordons alors peut en partie corriger ses erreurs.
+Pour aller plus loin, nous pourrions diversifié encore plus les cas d'expert, en ayant par exemple un bonne expertise pour $\beta$ mais une mauvaise pour les deux autres paramètres.
+\
+\
 
-Recap sur beta : quelles lois marchent le mieux, trend ?
-Recap sur alpha : l'estime de theta augmente et pas celle de alpha mais la forme reste correcte.
-Recap sur theta : un peu pareil que alpha, l'algo favorise theta par rapport à alpha.
-Recap expert : Sans surprise, si on a un mauvais expert, le MLE devient meilleur mais le fait de lui accorder une faible confiance sauve un peu les meubles.
-
-Commentaire :
-Il est important de vérifier la convergence de GMH et de MLE (GMH en faisant le plot de res_param et voir si bcp oscillations ou pas et pour MLE avec converged).
-
-Ouverture : on pourrait regarder encore d'autres croisements comme expert bon pour beta mais mauvais pour alpha etc mais trop long pour être inclus ici.
 
 # **Utilisation de l'IA**
-ChatGPT-5 pour corriger les erreurs de fonctions et choisir les lois a priori.
+Nous avons utilisés ChatGPT-5 principalement pour corriger les erreurs de nos fonctions implémentées, pour nous aider dans le choix des lois a priori et pour nous aider à obtenir les visuels voulus.
