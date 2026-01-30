@@ -40,7 +40,7 @@ $$
 $$
 
 Par la construction d'une inférence bayésienne, nous allons donc chercher à estimer les trois paramètres introduits $\alpha,\ \beta \text{ et } \theta$. \
-Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs de $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif sur l'évolution du processus, et ii) l'étude sur l'inférence bayésienne, en la comparant notamment à l'estimation par maximum de vraisemblance et en regardant l'impact des variations des différents paramètres du modèles ($\alpha$, $\beta$, $\theta$ et les paramètres relatifs à l'expert).
+Afin d'analyser la pertinence de l'approche bayésienne face à un problème de ce type, nous avons séparé notre analyse en deux phases : i) la simulation du processus selon différentes valeurs de $\alpha,\ \beta \text{ et } \theta$ afin d'observer leur impact respectif sur l'évolution du processus, et ii) l'étude sur l'inférence bayésienne, en la comparant notamment à l'estimation par maximum de vraisemblance et en regardant l'impact des variations des différents paramètres du modèle ($\alpha$, $\beta$, $\theta$ et les paramètres relatifs à l'expert).
 \
 \
 
@@ -48,7 +48,7 @@ Afin d'analyser la pertinence de l'approche bayésienne face à un problème de 
 Afin de tester l'effet de chaque paramètre sur l'évolution du processus, nous regardons individuellement l'impact de chacun d'eux. Pour cela, nous définissons 2 fonctions qui vont nous permettre de réaliser les simulations tout au long de cette analyse : 
 
   - La fonction `simulations`, qui prend en entrée les paramètres $\alpha,\ \beta \text{ et } \theta$ du processus Gamma ainsi que la taille des pas de simulation et d'inspection, et qui retourne une liste des grilles de pas (simulation et inspection) et du processus simulé à partir de celles-ci (simulation et inspection).
-  - La fonction `plot_simulations`, qui prend en entrée la sortie de `simulations` et qui retourne le graphique du processus associé, en distinguant les points simulés des points inspectés.\
+  - La fonction `plot_simulations`, qui prend en entrée la sortie de `simulations` et qui retourne le graphique du processus associé, en distinguant les points simulés des points inspectés.
 
 ```{r}
 # Fonction pour simuler un processus gamma
@@ -103,8 +103,7 @@ plot_simulations <- function(simulations, title = "") {
 
 
 ## *Variations de $\alpha$*
-Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{0.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.\
-
+Commençons par observer l'effet de $\alpha$ sur le processus. Pour cela, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\beta = 1$ et $\theta = 2$. Nous prenons ensuite $\alpha \in \{0.1,\ 1,\ 10,\ 20\}$ afin d'observer son effet.
 ```{r SimAlpha, cache=TRUE, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\beta = 1$, $\\theta = 2$) pour différents $\\alpha$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -145,14 +144,12 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-
-Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnel (de l'ordre de 200) à $\alpha$ : plus le paramètre est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
+Nous constatons donc que $\alpha$ n'a pas d'impact sur la *forme* du processus, mais seulement sur l'intervalle des valeurs de $X_t$. La vitesse de dégradation du processus semble être proportionnelle (de l'ordre de 200) à $\alpha$ : plus le paramètre est grand, plus le processus se dégrade rapidement **(\@ref(fig:SimAlpha))**.
 \
 
 
 ## *Variations de $\beta$*
-Observons maintenant l'effet de $\beta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = 1$ et $\theta = 2$. Nous prenons ensuite $\beta \in \{0.5,\ 1,\ 2,\ 3\}$ afin d'observer son effet.\
-
+Observons maintenant l'effet de $\beta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = 1$ et $\theta = 2$. Nous prenons ensuite $\beta \in \{0.5,\ 1,\ 2,\ 3\}$ afin d'observer son effet.
 ```{r SimBeta,fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\theta = 2$) pour différents $\\beta$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -202,8 +199,7 @@ Comme attendu, l'effet de $\beta$ varie selon l'intervalle de valeurs dans leque
 
 
 ## *Variations de $\theta$*
-Observons finalement l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.\
-
+Observons finalement l'effet de $\theta$. Comme précédemment, nous fixons les autres paramètres du modèle : nous fixons l'horizon à 100, le pas de simulation à 0.01, le pas d'inspection à 5, $\alpha = \beta = 1$. Nous prenons ensuite $\theta \in \{0.5,\ 1,\ 2,\ 5\}$ afin d'observer son effet.
 ```{r SimTheta, cache=TRUE, fig.align="center", fig.cap="Simulations d'un processus gamma non-homogène ($\\alpha = 1$, $\\beta = 1$) pour différents $\\theta$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -244,7 +240,6 @@ plot_sim4 <- plot_simulations(
 
 ggarrange(plot_sim1, plot_sim2, plot_sim3, plot_sim4, common.legend = TRUE)
 ```
-
 Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du processus, mais seulement sur la vitesse de dégradation du processus. Les deux semblent encore une fois être proportionnels : plus $\theta$ est grand, plus le processus se dégrade rapidement. Toutefois, l'influence de $\theta$ semble moins forte que celle de $\alpha$, le coefficient de proportionnalité étant ici de l'ordre de 100, contre 200 pour $\alpha$ **(\@ref(fig:SimTheta))**.
 \
 \
@@ -254,7 +249,7 @@ Comme pour $\alpha$, $\theta$ ne semble pas avoir d'impact sur la *forme* du pro
 ## *Contexte*
 Nous supposons maintenant que nous disposons d'un échantillon d'inspection du niveau de dégradation $x = \{x_0,\ \dots ,\ x_n\}$, obtenu à différents temps d'inspection $t = \{t_0,\ \dots,\ t_n\}$ et issus d'un processus gamma non-homogène de paramètres $\alpha,\ \beta \text{ et } \theta$. Nous souhaitons étudier la qualité de l'inférence bayésienne multidimensionnelle pour l'estimation de ces trois paramètres lorsque nous faisons varier les valeurs des paramètres, la qualité de la prédiction de l'expert ainsi que la confiance accordée à l'expert.
 
-Puisque nous sommes dans un cas multidimensionnelle, nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting, en testant différentes combinaisons de loi a priori pour les 3 paramètres. Les trois paramètres étant positifs, nous restreignons le choix des lois théoriques de chaque paramètre à un certain nombre de lois à support positif :
+Puisque nous sommes dans un cas multidimensionnel, nous allons donc passer par les algorithmes de Gibbs et de Metropolis-Hasting, en testant différentes combinaisons de loi a priori pour les 3 paramètres. Les trois paramètres étant positifs, nous restreignons le choix des lois théoriques de chaque paramètre à un certain nombre de lois à support positif :
 
   - Pour $\alpha$, nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi gamma* $\mathcal{G}(k,s)$.
   - Pour $\beta$ nous testerons soit une *loi log-normale*  $\mathcal{L\textit{og-}N}(\mu,\sigma)$, soit une *loi uniforme* $\mathcal{U}(a,b)$.
@@ -289,7 +284,6 @@ Afin de réaliser l'inférence bayésienne, nous calculons maintenant les diffé
 
 ### Calcul de la loi a posteriori pour $\theta$
 Nous avons choisi comme loi a priori pour $\theta$ une $\mathcal{I\textit{nv-}G}(a,b)$. Ainsi :
-
 $$
 \begin{aligned}
 p(\theta|y,\alpha,\beta) &= L(y|\alpha,\beta,\theta) \times p(\theta) \\
@@ -297,7 +291,7 @@ p(\theta|y,\alpha,\beta) &= L(y|\alpha,\beta,\theta) \times p(\theta) \\
 &\propto \theta^{-(\sum k_i(\alpha,\beta)+a+1)} e^{-\frac{\sum y_i + \beta}{\theta}}
 \end{aligned}
 $$
-Nous pouvons reconnaître, à une constante de normalisation prêt, la densité d'une $\mathcal{I\textit{nv-}G}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons donc estimer $\theta$ avec un algorithme de Gibbs.
+Nous pouvons reconnaître, à une constante de normalisation près, la densité d'une $\mathcal{I\textit{nv-}G}(a+\sum k_i(\alpha,\beta),\:b+\sum y_i)$. Nous pourrons donc estimer $\theta$ avec un algorithme de Gibbs.
 
 En supposant que les paramètres d'expert $\mu_{\theta} \text{ et } \sigma_{\theta}$ correspondent à $\mu_{\theta} = \mathbb{E}[\mathcal{I\textit{nv-}G}(a,b)] = \frac{b}{a-1}$ et $\sigma_{\theta} = Var(\mathcal{I\textit{nv-}G}(a,b)) = \frac{b^2}{(a-1)^2(a-2)}$, nous avons alors :
 $$
@@ -312,7 +306,6 @@ $$
   1. Calcul pour une $\mathcal{L\textit{og-}N}(\mu,\sigma)$.
 
 Nous avons :
-
 $$
 \begin{aligned}
 p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
@@ -335,9 +328,10 @@ $$
 
   2. Calcul pour une $\mathcal{G}(k,s)$.
 
+Nous avons :
 $$
 \begin{aligned}
-\text{Nous avons :} \quad p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
+p(\alpha|y,\beta,\theta) &= L(y|\alpha,\beta,\theta) \times p(\alpha) \\
 &\propto \frac{1}{\Gamma(k)s^k} \alpha^{k-1}e^{-\alpha/s} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
@@ -368,9 +362,10 @@ Nous choisissons comme distribution instrumentale pour $\beta$ une loi normale c
 
   2. Calcul pour une $\mathcal{U}(a,b)$.
 
+Nous avons :
 $$
 \begin{aligned}
-\text{Nous avons :} \quad p(\beta | y, \alpha, \theta) &= L(y | \alpha, \beta, \theta) \times p(\beta) \\
+p(\beta | y, \alpha, \theta) &= L(y | \alpha, \beta, \theta) \times p(\beta) \\
 &\propto \mathbf{1}_{\beta\in[a,b]} \prod_i \frac{1}{\Gamma(k_i(\alpha,\beta))\theta^{k_i(\alpha,\beta)}}y_i^{k_i(\alpha,\beta)}
 \end{aligned}
 $$
@@ -744,7 +739,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Dans ce contexte, la meilleure combinaison de lois a priori en termes d'estimation par GMH *des trois paramètres* semble donc être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En effet, lorsque $\alpha \sim \mathcal{G}$, l'algorithme tend à sous-évaluer $\beta$ et sur-évaluer $\alpha$. L'algorithme MLE tend également à sur-estimer $\alpha$, plus que l'algorithme GMH pour $\alpha \sim \mathcal{L\textit{og-}N}$. Suivant le choix des lois et le paramètre considéré, GMH peut être meilleur ou moins bon que MLE : le choix de l'un ou l'autre dépend donc de la justesse des lois a priori choisies et de quel **(\@ref(fig:InfConc))**.
+Dans ce contexte, la meilleure combinaison de lois a priori en termes d'estimation par GMH *des trois paramètres* semble donc être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. En effet, lorsque $\alpha \sim \mathcal{G}$, l'algorithme tend à sous-évaluer $\beta$ et sur-évaluer $\alpha$. L'algorithme MLE tend également à surestimer $\alpha$, plus que l'algorithme GMH pour $\alpha \sim \mathcal{L\textit{og-}N}$. Suivant le choix des lois et le paramètre considéré, GMH peut être meilleur ou moins bon que MLE : le choix de l'un ou l'autre dépend donc de la justesse des lois a priori choisies et de quel **(\@ref(fig:InfConc))**.
 
 
 ### $\beta = 1$, cas linéaire
@@ -815,7 +810,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Encore une fois, les meilleurs combinaisons de lois en termes d'estimation GMH *des trois paramètres* semble être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Nous constatons aussi que MLE sous-estime $\theta$ et sur estime légèrement $\alpha$. Ainsi, dans ce cas là, le meilleur choix d'estimations semble être le bayésien, avec une des deux combinaisons citées **(\@ref(fig:InfLin))**.
+Encore une fois, les meilleures combinaisons de lois en termes d'estimation GMH *des trois paramètres* semblent être soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{L\textit{og-}N}$, soit $\alpha \sim \mathcal{L\textit{og-}N} \text{ et } \beta \sim \mathcal{U}$. Nous constatons aussi que MLE sous-estime $\theta$ et sur estime légèrement $\alpha$. Ainsi, dans ce cas là, le meilleur choix d'estimations semble être le bayésien, avec une des deux combinaisons citées **(\@ref(fig:InfLin))**.
 
 
 ### $\beta$ >1, cas convexe
@@ -886,13 +881,12 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Visuellement, nous constatons que MLE semble être très bon pour approcher le processus, les deux courbes étant confondues. GMH semble plutôt le surestimer lorsque $t > 75$. Toutefois, en regardant de plus près les estimations de chaque paramètre, nous remarquons que seule l'estimation de $\beta$ par MLE est bonne. L'algorithme MLE surestime largement $\theta$ et sous-estimie $\alpha$. Ainsi, aucune des deux estimations ne semble bien  adaptée. Le choix portera donc plutôt sur l'objectif final d'estimation, i.e. retrouver les vrais paramètres ou retrouver la forme du processus **(\@ref(fig:InfConv))**.
+Visuellement, nous constatons que MLE semble être très bon pour approcher le processus, les deux courbes étant confondues. GMH semble plutôt le surestimer lorsque $t > 75$. Toutefois, en regardant de plus près les estimations de chaque paramètre, nous remarquons que seule l'estimation de $\beta$ par MLE est bonne. L'algorithme MLE sur-estime largement $\theta$ et sous-estimie $\alpha$. Ainsi, aucune des deux estimations ne semble bien  adaptée. Le choix portera donc plutôt sur l'objectif final d'estimation, i.e. retrouver les vrais paramètres ou retrouver la forme du processus **(\@ref(fig:InfConv))**.
 \
 
 
 ## *Variations de $\alpha$*
 Nous regardons maintenant l'impact des variations de $\alpha$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\alpha$ agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\beta = 2$ et $\theta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
-\
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -921,7 +915,6 @@ theta0 <- mu_theta
 
 ### $\alpha = 1$
 Commençons par regarder le cas où $\alpha = 1$. Comme pour $\beta$ et $\theta$, nous considérons le cas où l'expert est bon et où nous lui faisons confiance pour l'expertise de $\alpha$.
-\
 ```{r Alpha1, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=1$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -988,12 +981,11 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Peu importe la combinaison de lois a priori choisies, GMH est toujours mauvais pour estimer les paramètres du processus, et il se trompe toujours de la même manière : il sur-estime $\theta$ et sous-estime $\alpha$. Cette erreur peut nous faire penser au rôle similaire que jouent ces deux paramètres sur la forme de la courbe et les valeurs du processus, i.e. de coefficient de proportionnalité. À l'inverse, MLE donne une bonne estimation de chaque paramètre. Cependant, nous constatons sur la figure que les deux courbes estimées reste toujours assez proches du vrai processus. Il semble donc préférable d'utiliser MLE ici **(\@ref(fig:Alpha1))**.
+Peu importe la combinaison de lois a priori choisies, GMH est toujours mauvais pour estimer les paramètres du processus, et il se trompe toujours de la même manière : il sur-estime $\theta$ et sous-estime $\alpha$. Cette erreur peut nous faire penser au rôle similaire que jouent ces deux paramètres sur la forme de la courbe et les valeurs du processus, i.e. de coefficient de proportionnalité. À l'inverse, MLE donne une bonne estimation de chaque paramètre. Cependant, nous constatons sur la figure que les deux courbes estimées restent toujours assez proches du vrai processus. Il semble donc préférable d'utiliser MLE ici **(\@ref(fig:Alpha1))**.
 
 
 ### $\alpha = 10$
-Nous regardons ensuite le cas $\alpha=10$, toujours avec les même conditions de départ pour les autres paramètres.
-\
+Nous regardons ensuite le cas $\alpha=10$, toujours avec les mêmes conditions de départ pour les autres paramètres.
 ```{r Alpha10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=10$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1060,12 +1052,11 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Encore une fois, GMH sous-estime dans tous les cas $\alpha$ et sur-estime $\theta$. MLE reste encore assez performant, bien que nous puissions constater une dégradation de ses estimations (elles sont moins proches des vraies valeurs que précédemment). Les deux courbes estimées reste encore une fois toujours assez proches du vrai processus même si on observe un léger décalage pour GMH pour les 4 combinaisons **(\@ref(fig:Alpha10))**.
+Encore une fois, GMH sous-estime dans tous les cas $\alpha$ et sur-estime $\theta$. MLE reste encore assez performant, bien que nous puissions constater une dégradation de ses estimations (elles sont moins proches des vraies valeurs que précédemment). Les deux courbes estimées restent encore une fois toujours assez proches du vrai processus même si on observe un léger décalage pour GMH pour les 4 combinaisons **(\@ref(fig:Alpha10))**.
 
 
 ### $\alpha = 100$
-Nous regardons finalement $\alpha=100$, toujours avec les même conditions de départ pour les autres paramètres.
-\
+Nous regardons finalement $\alpha=100$, toujours avec les mêmes conditions de départ pour les autres paramètres.
 ```{r Alpha100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\alpha=100$, $\\beta=2$ et $\\theta=2$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1132,12 +1123,12 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Les observations suivent la ligne de conduite observée précédemment : GMH reste mauvais pour estimer $\alpha \text{ et } \theta$ les estimations de MLE continue de se dégrader et les courbes estimées pour MLE reste assez proches du vrai processus tandis que celles de GMH se décalent encore d'avantage **(\@ref(fig:Alpha100))**.
+Les observations suivent la ligne de conduite observée précédemment : GMH reste mauvais pour estimer $\alpha \text{ et } \theta$, les estimations de MLE continuent de se dégrader et les courbes estimées pour MLE restent assez proches du vrai processus tandis que celles de GMH se décalent encore davantage **(\@ref(fig:Alpha100))**.
 \
 
 
 ## *Variations de $\theta$*
-Nous regardons maintenant l'impact des variations de $\theta$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\theta$, comme $\alpha$, agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\alpha = 1$ et $\beta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
+Nous regardons maintenant l'impact des variations de $\theta$ sur la qualité de l'inférence bayésienne. Nous avions constaté que $\theta$, comme $\alpha$, agissait comme un coefficient de proportionnalité sur $X_t$, c'est pourquoi nous allons observer les variations pour $\alpha \in \{1,\ 10,\ 100\}$. Nous fixons $\alpha = 1$ et $\beta = 2$ et gardons les mêmes paramètres que précédemment pour le pas de simulations, d'inspection, d'horizon ainsi que pour la qualité de l'estimation de l'expert $\mu_{exp}$ et la confiance accordée $\sigma_{exp}$.
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -1234,8 +1225,7 @@ Nous constatons que GMH estime assez bien $\beta$ mais sur-estime $\theta$ et so
 
 
 ### $\theta = 10$
-Nous regardons maintenant l'impact pour $\theta = 10$, toujours avec les même conditions de départ pour les autres paramètres.
-\
+Nous regardons maintenant l'impact pour $\theta = 10$, toujours avec les mêmes conditions de départ pour les autres paramètres.
 ```{r Theta10, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=10$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1305,8 +1295,7 @@ Contrairement à ce que nous avions intuité, la qualité d'estimation de MLE ne
 
 
 ### $\theta = 100$
-Nous regardons finalement l'impact pour $\theta = 100$, toujours avec les même conditions de départ pour les autres paramètres.
-\
+Nous regardons finalement l'impact pour $\theta = 100$, toujours avec les mêmes conditions de départ pour les autres paramètres.
 ```{r Theta100, cache=TRUE, fig.align="center", fig.cap="Résultats d'estimations bayésiennes et par maximum de vraisemblance lorsque $\\theta=100$, $\\beta=2$ et $\\alpha=1$", fig.pos="H"}
 # Seed pour la reproductibilité
 set.seed(1)
@@ -1378,7 +1367,6 @@ Nous obtenons toujours le même constat qu'avec $\theta = 10$. Par contre, pour 
 
 ## *Variations des paramètres relatifs à l'expert*
 Nous nous intéressons maintenant à l'impact des paramètres d'expert sur la qualité d'estimation. Comme GMH semblait être le plus efficace avec $\beta = 1$, nous conservons cette valeur. De plus, nous refixons les paramètres dans le même cadre que celui utilisé lors des variations de $\beta$.
-\
 ```{r}
 # Paramètres de simulation
 dt_sim <- 0.01
@@ -1551,7 +1539,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Bien qu'assez faible, nous observons une dégradation de des estimations de GMH, notamment pour $\theta$ et $\alpha$. Les valeurs initiales données par l'expert peuvent donc entraîner de grandes variations par rapport aux vraies valeurs **(@ref(fig:MauvaisEleve2))**.
+Bien qu'assez faible, nous observons une dégradation des estimations de GMH, notamment pour $\theta$ et $\alpha$. Les valeurs initiales données par l'expert peuvent donc entraîner de grandes variations par rapport aux vraies valeurs **(@ref(fig:MauvaisEleve2))**.
 
 
 ### Expert bon et faible confiance
@@ -1634,7 +1622,7 @@ plot4 <- vis_res(
 # Visualisation finale
 ggarrange(plot1, plot2, plot3, plot4, common.legend = TRUE)
 ```
-Bien que nous n'accordions pas une grande confiance à l'expert, le fait qu'il soit bon permet quand-même d'obtenir de bonnes estimations des paramètres via GMH. L'impact de la confiance accordée semble donc moins important que la qualité de l'expert **(\@ref(fig:BonFaible2))**.
+Bien que nous n'accordions pas une grande confiance à l'expert, le fait qu'il soit bon permet quand même d'obtenir de bonnes estimations des paramètres via GMH. L'impact de la confiance accordée semble donc moins important que la qualité de l'expert **(\@ref(fig:BonFaible2))**.
 
 
 ### Expert mauvais et faible confiance
@@ -1722,16 +1710,16 @@ Une faible confiance permet de corriger en partie les mauvaises valeurs de l'exp
 \
 
 # **Conclusion**
-Nous avons constaté dans cette analyse que des variations sur au moins un des trois paramètres du processus ($\alpha,\ \beta \text{ et } \theta$) entraînent de nombreux changement dans les estimations via l'algorithme GMH. Ainsi, suivant les vraies valeurs choisies, la meilleure combinaison de lois a priori peut varier. Toutefois, la meilleure loi a priori pour $\alpha$ reste toujours une log-normale, le choix d'une loi a priori gamma ayant montrée une baisse de la qualité d'estimation de manière quasiment systématique. En comparant aux estimations faites par maximum de vraisemblance, nous avons aussi constaté que l'estimation bayésienne n'était pas toujours la plus adaptée suivant les cas pour un temps de calcul similaire.
+Nous avons constaté dans cette analyse que des variations sur au moins un des trois paramètres du processus ($\alpha,\ \beta \text{ et } \theta$) entraînent de nombreux changements dans les estimations via l'algorithme GMH. Ainsi, suivant les vraies valeurs choisies, la meilleure combinaison de lois a priori peut varier. Toutefois, la meilleure loi a priori pour $\alpha$ reste toujours une log-normale, le choix d'une loi a priori gamma ayant montré une baisse de la qualité d'estimation de manière quasiment systématique. En comparant aux estimations faites par maximum de vraisemblance, nous avons aussi constaté que l'estimation bayésienne n'était pas toujours la plus adaptée suivant les cas pour un temps de calcul similaire.
 
-Nous pouvons également remarqué que ces estimations (MLE et GMH) semblent mieux adaptées pour retrouver la forme du processus plutôt que la valeur de ces paramètres.
+Nous pouvons également remarquer que ces estimations (MLE et GMH) semblent mieux adaptées pour retrouver la forme du processus plutôt que la valeur de ces paramètres.
 
-Comme attendu au niveau des paramètres relatif à l'expert, les estimations sont dégradées lorsque nous avons un mauvais expert, et le degré de confiance que nous lui accordons alors peut en partie corriger ses erreurs.
+Comme attendu au niveau des paramètres relatifs à l'expert, les estimations sont dégradées lorsque nous avons un mauvais expert, et le degré de confiance que nous lui accordons alors peut en partie corriger ses erreurs.
 
-Pour aller plus loin, nous pourrions diversifier encore plus les cas d'expert, en ayant par exemple un bonne expertise pour $\beta$ mais une mauvaise pour les deux autres paramètres et regarder l'impact sur l'estimation faite par l'algorithme GMH.
+Pour aller plus loin, nous pourrions diversifier encore plus les cas d'expert, en ayant par exemple une bonne expertise pour $\beta$ mais une mauvaise pour les deux autres paramètres et regarder l'impact sur l'estimation faite par l'algorithme GMH.
 \
 \
 
 
 # **Utilisation de l'IA**
-Nous avons utilisés ChatGPT-5 principalement pour corriger les erreurs de nos fonctions implémentées, pour nous aider dans le choix des lois a priori et pour nous aider à obtenir les visuels voulus.
+Nous avons utilisé ChatGPT-5 principalement pour corriger les erreurs de nos fonctions implémentées, pour nous aider dans le choix des lois a priori et pour nous aider à obtenir les visuels voulus.
